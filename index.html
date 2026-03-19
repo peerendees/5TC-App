@@ -371,6 +371,48 @@
       color: var(--text-muted);
     }
 
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 900;
+    }
+
+    .modal {
+      background: var(--surface-card);
+      border: 1px solid var(--brand-gold);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 360px;
+      max-width: 90vw;
+    }
+
+    .modal h3 {
+      color: var(--brand-gold);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal h3::before {
+      content: '+';
+      color: var(--brand-gold-light);
+      font-weight: 300;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -472,7 +514,7 @@
 
   <!-- Actions -->
   <div class="actions">
-    <button class="btn btn-primary" id="generateBtn" onclick="generateBook()">Buch generieren</button>
+    <button class="btn btn-primary" id="generateBtn" onclick="showPasswordModal()">Buch generieren</button>
     <button class="btn btn-primary" id="downloadBtn" onclick="downloadDocx()" style="display:none;">Buch herunterladen</button>
     <button class="btn btn-secondary" id="resetBtn" onclick="resetApp()" style="display:none;">Eingaben zurücksetzen</button>
   </div>
@@ -629,6 +671,63 @@ function onDrop(e, targetIndex) {
 function onDragEnd(e) {
   e.currentTarget.classList.remove('dragging');
   draggedIndex = null;
+}
+
+// ── Password Modal ──
+function showPasswordModal() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const bookTitle = document.getElementById('bookTitle').value.trim();
+
+  if (!apiKey) { showToast('Bitte API Key eingeben.', 'error'); return; }
+  if (chapters.length === 0) { showToast('Bitte mindestens ein Transkript hinzufügen.', 'error'); return; }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Zugangskennwort</h3>
+      <label style="margin-top:0;">Bitte Kennwort eingeben:</label>
+      <input type="password" id="modalPassword" placeholder="Kennwort..." autofocus>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modalCancel">Abbrechen</button>
+        <button class="btn btn-primary" id="modalConfirm">Generieren</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const pwInput = document.getElementById('modalPassword');
+  const confirmBtn = document.getElementById('modalConfirm');
+  const cancelBtn = document.getElementById('modalCancel');
+
+  function closeModal() { overlay.remove(); }
+
+  function checkAndProceed() {
+    const now = new Date();
+    const euOpts = { timeZone: 'Europe/Berlin', hour: '2-digit', hour12: false };
+    const dayOpts = { timeZone: 'Europe/Berlin', day: '2-digit' };
+    const dd = new Intl.DateTimeFormat('de-DE', dayOpts).format(now);
+    const hh = new Intl.DateTimeFormat('de-DE', euOpts).format(now);
+    const expectedPw = '8Lp!n3#' + dd + hh;
+
+    if (pwInput.value === expectedPw) {
+      closeModal();
+      generateBook();
+    } else {
+      showToast('Falsches Kennwort.', 'error');
+      pwInput.value = '';
+      pwInput.focus();
+    }
+  }
+
+  confirmBtn.addEventListener('click', checkAndProceed);
+  cancelBtn.addEventListener('click', closeModal);
+  pwInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkAndProceed();
+    if (e.key === 'Escape') closeModal();
+  });
+
+  setTimeout(() => pwInput.focus(), 50);
 }
 
 // ── Generate Book ──
