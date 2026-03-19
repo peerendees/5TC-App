@@ -473,7 +473,8 @@
   <!-- Actions -->
   <div class="actions">
     <button class="btn btn-primary" id="generateBtn" onclick="generateBook()">Buch generieren</button>
-    <button class="btn btn-secondary" id="downloadBtn" onclick="downloadDocx()" style="display:none;">DOCX herunterladen</button>
+    <button class="btn btn-primary" id="downloadBtn" onclick="downloadDocx()" style="display:none;">Buch herunterladen</button>
+    <button class="btn btn-secondary" id="resetBtn" onclick="resetApp()" style="display:none;">Eingaben zurücksetzen</button>
   </div>
 
 </div>
@@ -697,17 +698,21 @@ async function generateBook() {
 
   progressBar.style.width = '100%';
   progressText.textContent = 'Alle Kapitel verarbeitet!';
-  generateBtn.disabled = false;
 
   const successCount = chapters.filter(c => c.status === 'done').length;
   if (successCount > 0) {
     document.getElementById('downloadBtn').style.display = '';
     showToast(`${successCount} Kapitel erfolgreich generiert!`, 'success');
   }
+
+  // Generieren bleibt deaktiviert, Reset wird sichtbar
+  generateBtn.disabled = true;
+  document.getElementById('resetBtn').style.display = '';
 }
 
 // ── DOCX Generation ──
 async function downloadDocx() {
+  try {
   const bookTitle = document.getElementById('bookTitle').value.trim() || 'Mein Buch';
   const bookSubtitle = document.getElementById('bookSubtitle').value.trim();
   const bookAuthor = document.getElementById('bookAuthor').value.trim();
@@ -948,7 +953,32 @@ async function downloadDocx() {
   const blob = await Packer.toBlob(doc);
   const filename = bookTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß ]/g, '').replace(/\s+/g, '_') + '.docx';
   saveAs(blob, filename);
-  showToast('DOCX wurde heruntergeladen!', 'success');
+  showToast('Buch wurde heruntergeladen!', 'success');
+
+  // Nach Download zurücksetzen
+  resetApp();
+  } catch (err) {
+    console.error('DOCX-Fehler:', err);
+    showToast('Fehler beim Erstellen der DOCX: ' + err.message, 'error');
+  }
+}
+
+// ── Reset ──
+function resetApp() {
+  chapters = [];
+  renderChapters();
+
+  document.getElementById('bookTitle').value = '';
+  document.getElementById('bookSubtitle').value = '';
+  // Autor bleibt erhalten
+  document.getElementById('apiKey').value && null; // API Key bleibt erhalten
+
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('downloadBtn').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressText').textContent = 'Bereit';
 }
 
 // ── Toast ──
