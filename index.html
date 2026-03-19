@@ -504,9 +504,10 @@ dropZone.addEventListener('drop', (e) => {
   handleFiles(e.dataTransfer.files);
 });
 
-fileInput.addEventListener('change', (e) => {
-  handleFiles(e.target.files);
+fileInput.addEventListener('change', async (e) => {
+  const fileArray = Array.from(e.target.files);
   fileInput.value = '';
+  await handleFiles(fileArray);
 });
 
 async function handleFiles(files) {
@@ -652,9 +653,13 @@ async function generateBook() {
     progressText.textContent = `Kapitel ${i + 1} von ${chapters.length} wird verarbeitet...`;
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 120000);
+
       const response = await fetch('/api/generate-chapter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           apiKey,
           transcript: chapters[i].transcript,
@@ -664,9 +669,15 @@ async function generateBook() {
         })
       });
 
+      clearTimeout(timeout);
+
       if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'API-Fehler');
+        let errMsg = `HTTP ${response.status}`;
+        try {
+          const err = await response.json();
+          errMsg = err.error || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
@@ -675,7 +686,10 @@ async function generateBook() {
     } catch (err) {
       chapters[i].status = 'error';
       chapters[i].generated = null;
-      showToast(`Fehler bei Kapitel ${i + 1}: ${err.message}`, 'error');
+      const msg = err.name === 'AbortError'
+        ? 'Zeitüberschreitung (2 Min.) - Transkript evtl. zu lang'
+        : err.message;
+      showToast(`Fehler bei Kapitel ${i + 1}: ${msg}`, 'error');
     }
 
     renderChapters();
