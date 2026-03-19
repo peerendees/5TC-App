@@ -439,16 +439,16 @@
 
     <div class="drop-zone" id="dropZone">
       <div class="icon">+</div>
-      <p>Dateien hierher ziehen oder klicken zum Auswaehlen</p>
+      <p>Dateien hierher ziehen oder klicken zum Auswählen</p>
       <p style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--border);">.txt, .md, .docx</p>
       <input type="file" id="fileInput" multiple accept=".txt,.md,.docx">
     </div>
 
     <div class="add-text-section">
-      <label for="pasteText">Oder Text direkt einfuegen:</label>
+      <label for="pasteText">Oder Text direkt einfügen:</label>
       <div class="add-text-row">
-        <textarea id="pasteText" placeholder="Transkript hier einfuegen..."></textarea>
-        <button class="btn btn-secondary" onclick="addPastedText()" style="align-self: flex-end;">Hinzufuegen</button>
+        <textarea id="pasteText" placeholder="Transkript hier einfügen..."></textarea>
+        <button class="btn btn-secondary" onclick="addPastedText()" style="align-self: flex-end;">Hinzufügen</button>
       </div>
     </div>
   </div>
@@ -457,7 +457,7 @@
   <div class="section">
     <div class="section-title">Kapitel</div>
     <div id="chapterList" class="chapter-list">
-      <div class="empty-state">Noch keine Transkripte hinzugefuegt.</div>
+      <div class="empty-state">Noch keine Transkripte hinzugefügt.</div>
     </div>
   </div>
 
@@ -557,7 +557,7 @@ function renderChapters() {
   const list = document.getElementById('chapterList');
 
   if (chapters.length === 0) {
-    list.innerHTML = '<div class="empty-state">Noch keine Transkripte hinzugefuegt.</div>';
+    list.innerHTML = '<div class="empty-state">Noch keine Transkripte hinzugefügt.</div>';
     return;
   }
 
@@ -581,14 +581,14 @@ function renderChapters() {
         </div>
         <div class="chapter-preview">${preview}</div>
         <div class="chapter-meta">
-          <span>${wordCount.toLocaleString('de-DE')} Woerter</span>
+          <span>${wordCount.toLocaleString('de-DE')} Wörter</span>
           <span class="chapter-status ${statusClass}">${statusLabel}</span>
         </div>
         ${ch.generated ? `
           <div class="chapter-meta" style="margin-top: 0.25rem;">
             <button class="preview-toggle" onclick="togglePreview(${i})">Vorschau anzeigen/ausblenden</button>
           </div>
-          <div class="preview-content" id="preview-${i}">${ch.generated.replace(/</g, '&lt;').substring(0, 2000)}${ch.generated.length > 2000 ? '\n\n... (gekuerzt)' : ''}</div>
+          <div class="preview-content" id="preview-${i}">${ch.generated.replace(/</g, '&lt;').substring(0, 2000)}${ch.generated.length > 2000 ? '\n\n... (gekürzt)' : ''}</div>
         ` : ''}
       </div>
     `;
@@ -635,7 +635,7 @@ async function generateBook() {
   const bookTitle = document.getElementById('bookTitle').value.trim();
 
   if (!apiKey) { showToast('Bitte API Key eingeben.', 'error'); return; }
-  if (chapters.length === 0) { showToast('Bitte mindestens ein Transkript hinzufuegen.', 'error'); return; }
+  if (chapters.length === 0) { showToast('Bitte mindestens ein Transkript hinzufügen.', 'error'); return; }
 
   const generateBtn = document.getElementById('generateBtn');
   const progressSection = document.getElementById('progressSection');
