@@ -490,6 +490,128 @@
       to { transform: rotate(360deg); }
     }
 
+    /* Mode Toggle */
+    .mode-toggle {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-toggle .mode-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg2);
+      color: var(--text-muted);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .mode-toggle .mode-btn.active {
+      background: rgba(181, 116, 42, 0.1);
+      border-color: var(--copper);
+      color: var(--copper-lt);
+    }
+
+    .mode-toggle .mode-btn:hover:not(.active) {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    /* SOP Preview */
+    .sop-preview {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+      font-family: 'Lora', serif;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--text);
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .sop-preview h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--copper);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 1.2rem 0 0.5rem 0;
+    }
+
+    .sop-preview h2:first-child { margin-top: 0; }
+
+    .sop-preview h3 {
+      font-family: 'Lora', serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--gold-dim);
+      margin: 0.8rem 0 0.4rem 0;
+    }
+
+    .sop-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-notion {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border2);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-notion:hover {
+      border-color: var(--copper);
+      color: var(--copper);
+    }
+
+    .tag-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.35rem;
+    }
+
+    .tag-chip {
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .tag-chip.selected {
+      border-color: var(--copper);
+      background: rgba(181, 116, 42, 0.12);
+      color: var(--copper-lt);
+    }
+
+    .tag-chip:hover:not(.selected) {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
     /* Input Mode Toggle */
     .input-toggle {
       display: flex;
@@ -903,8 +1025,14 @@
 
 <div class="container">
 
+  <!-- Mode Toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeBook" onclick="setMode('book')">Buchkapitel</button>
+    <button class="mode-btn" id="modeSOP" onclick="setMode('sop')">SOP-Generator</button>
+  </div>
+
   <!-- Book Meta -->
-  <div class="section">
+  <div class="section" id="bookSettingsSection">
     <div class="section-title">Projektinformationen</div>
     <label for="bookTitle">Titel</label>
     <input type="text" id="bookTitle" placeholder="Titel des Projekts">
@@ -938,7 +1066,7 @@
   </div>
 
   <!-- Upload / Paste -->
-  <div class="section">
+  <div class="section" id="bookTranscriptSection">
     <div class="section-title">Transkripte</div>
 
     <div class="input-toggle">
@@ -969,7 +1097,7 @@
   </div>
 
   <!-- Chapters -->
-  <div class="section">
+  <div class="section" id="bookChaptersSection">
     <div class="section-title">Kapitel</div>
     <div id="chapterList" class="chapter-list">
       <div class="empty-state">Noch keine Transkripte hinzugefügt.</div>
@@ -997,6 +1125,75 @@
       <div class="progress-bar" id="progressBar"></div>
     </div>
     <div class="progress-text" id="progressText">Bereit</div>
+  </div>
+
+  <!-- SOP Settings (hidden by default) -->
+  <div class="section" id="sopSettingsSection" style="display:none;">
+    <div class="section-title">SOP-Einstellungen</div>
+    <label for="sopTitle">SOP-Titel</label>
+    <input type="text" id="sopTitle" placeholder="z.B. Neuen Mitarbeiter onboarden">
+    <div class="row">
+      <div>
+        <label for="sopAudience">Zielgruppe</label>
+        <select id="sopAudience">
+          <option value="einsteiger">Einsteiger</option>
+          <option value="fortgeschritten">Fortgeschrittene</option>
+          <option value="experte">Experten</option>
+        </select>
+      </div>
+      <div>
+        <label for="sopModel">KI-Modell</label>
+        <select id="sopModel">
+          <option value="claude-sonnet-4-20250514">Claude Sonnet 4 — Schnell</option>
+          <option value="claude-opus-4-20250514">Claude Opus 4 — Beste Qualität</option>
+        </select>
+      </div>
+    </div>
+    <label>Tags</label>
+    <div class="tag-selector" id="sopTagSelector"></div>
+    <label>Relevanz</label>
+    <div class="tag-selector" id="sopRelevanceSelector"></div>
+  </div>
+
+  <!-- SOP Input (hidden by default) -->
+  <div class="section" id="sopInputSection" style="display:none;">
+    <div class="section-title">Prozessbeschreibung</div>
+    <div class="input-toggle">
+      <button class="toggle-btn active" id="sopToggleUpload" onclick="setSopInputMode('upload')">Datei hochladen</button>
+      <button class="toggle-btn" id="sopTogglePaste" onclick="setSopInputMode('paste')">Text einfügen</button>
+    </div>
+    <div id="sopUploadArea">
+      <div class="drop-zone" id="sopDropZone">
+        <div class="icon">+</div>
+        <p>Prozessbeschreibung hierher ziehen oder klicken</p>
+        <p style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--border);">.txt, .md, .docx</p>
+        <input type="file" id="sopFileInput" accept=".txt,.md,.docx">
+      </div>
+    </div>
+    <div id="sopPasteArea" style="display:none;">
+      <div class="paste-area">
+        <textarea id="sopPasteText" placeholder="Prozessbeschreibung hier einfügen — beschreibe den Ablauf so detailliert wie möglich..." style="min-height: 200px;"></textarea>
+      </div>
+    </div>
+    <div id="sopTranscriptInfo" style="display:none; margin-top: 0.75rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--copper-lt); text-transform: uppercase;">Geladen</span>
+        <span id="sopTranscriptName" style="font-size: 0.85rem; color: var(--text); flex: 1;"></span>
+        <span id="sopTranscriptSize" style="font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted);"></span>
+        <button class="chapter-remove" onclick="clearSopTranscript()" title="Entfernen">×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOP Result (hidden by default) -->
+  <div class="section" id="sopResultSection" style="display:none;">
+    <div class="section-title">Generierte SOP</div>
+    <div id="sopPreview" class="sop-preview"></div>
+    <div class="sop-actions">
+      <button class="btn btn-primary" onclick="pushSopToNotion()">In Notion speichern</button>
+      <button class="btn btn-secondary" onclick="downloadSopDocx()">DOCX herunterladen</button>
+      <button class="btn btn-secondary" onclick="copySopToClipboard()">Kopieren</button>
+    </div>
   </div>
 
   <!-- Actions -->
@@ -1338,9 +1535,19 @@ function onDragEnd(e) {
 
 // ── Generate Flow: Generate → Password → API Key → Struktur → Generate ──
 function onGenerate() {
-  if (chapters.length === 0) {
-    showToast('Bitte mindestens ein Transkript hinzufügen.', 'error');
-    return;
+  if (currentMode === 'sop') {
+    // SOP mode: check transcript, then password, then API key, then generate
+    const pasteText = document.getElementById('sopPasteText').value.trim();
+    if (!sopTranscript && !pasteText) {
+      showToast('Bitte eine Prozessbeschreibung eingeben oder hochladen.', 'error');
+      return;
+    }
+  } else {
+    // Book mode
+    if (chapters.length === 0) {
+      showToast('Bitte mindestens ein Transkript hinzufügen.', 'error');
+      return;
+    }
   }
 
   if (passwordRequired) {
@@ -1583,7 +1790,11 @@ function showApiKeyModal() {
     }
 
     closeModal();
-    showStructureStep();
+    if (currentMode === 'sop') {
+      generateSop();
+    } else {
+      showStructureStep();
+    }
   }
 
   confirmBtn.addEventListener('click', proceed);
@@ -1951,6 +2162,464 @@ function resetApp() {
 
   updateStepBar(1);
 }
+
+// ══════════════════════════════════════════
+// ── SOP MODE ──
+// ══════════════════════════════════════════
+
+let currentMode = 'book';
+let sopTranscript = '';
+let sopTranscriptName = '';
+let sopGeneratedContent = '';
+
+// Available tags and relevance from Notion DB
+const NOTION_TAGS = ['Website', 'Vodafone', 'Permissions/Access', 'Mailchimp', 'Billing', 'Legal', 'Publishing', 'Accounting', 'HR', 'Google Workspace/Gsuite', 'Notion', 'Documentation', 'Salesforce', 'Hiring', 'App', 'QA', 'GitHub', 'Parse.ly', 'Google Analytics', 'Ads', 'Email', 'M-HIS', 'Göhrum-spezifische Warenwirtschaft', 'Automation', 'n8n', 'Agent', 'KI', 'Prompting', 'MCR', 'Live Demo', 'IONOS', 'LinkedIn', 'Direktnachrichten', 'DSGVO-konform', 'Threema Work', 'Cloudflare', 'iSeries', 'QlikView'];
+const NOTION_RELEVANCE = ['Exec', 'COO', 'CTO', 'EIC', 'News', 'Everyone', 'EDV', 'EDV-Admin', 'n8n Developer', 'MCR Berater', 'Web Developer', 'Content Manager', 'TecCom'];
+
+let selectedTags = [];
+let selectedRelevance = [];
+
+// Notion token storage
+function saveNotionToken(token) {
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(token)));
+    localStorage.setItem('ts5tc_nt', encoded);
+  } catch (e) {}
+}
+
+function loadNotionToken() {
+  try {
+    const encoded = localStorage.getItem('ts5tc_nt');
+    if (!encoded) return '';
+    return decodeURIComponent(escape(atob(encoded)));
+  } catch (e) { return ''; }
+}
+
+// Initialize tag/relevance selectors
+function initSopSelectors() {
+  const tagContainer = document.getElementById('sopTagSelector');
+  const relContainer = document.getElementById('sopRelevanceSelector');
+
+  tagContainer.innerHTML = NOTION_TAGS.map(t =>
+    `<span class="tag-chip" onclick="toggleSopTag(this, '${t.replace(/'/g, "\\'")}')">${t}</span>`
+  ).join('');
+
+  relContainer.innerHTML = NOTION_RELEVANCE.map(r =>
+    `<span class="tag-chip" onclick="toggleSopRelevance(this, '${r.replace(/'/g, "\\'")}')">${r}</span>`
+  ).join('');
+}
+
+function toggleSopTag(el, tag) {
+  el.classList.toggle('selected');
+  if (selectedTags.includes(tag)) {
+    selectedTags = selectedTags.filter(t => t !== tag);
+  } else {
+    selectedTags.push(tag);
+  }
+}
+
+function toggleSopRelevance(el, rel) {
+  el.classList.toggle('selected');
+  if (selectedRelevance.includes(rel)) {
+    selectedRelevance = selectedRelevance.filter(r => r !== rel);
+  } else {
+    selectedRelevance.push(rel);
+  }
+}
+
+// Mode switching
+function setMode(mode) {
+  currentMode = mode;
+  const bookSections = ['bookSettingsSection', 'bookTranscriptSection', 'bookChaptersSection', 'structureSection', 'progressSection'];
+  const sopSections = ['sopSettingsSection', 'sopInputSection'];
+
+  document.getElementById('modeBook').classList.toggle('active', mode === 'book');
+  document.getElementById('modeSOP').classList.toggle('active', mode === 'sop');
+
+  if (mode === 'book') {
+    bookSections.forEach(id => {
+      const el = document.getElementById(id);
+      if (id === 'structureSection' || id === 'progressSection') return; // these are dynamic
+      el.style.display = '';
+    });
+    sopSections.forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('sopResultSection').style.display = 'none';
+    document.getElementById('generateBtn').textContent = 'Generieren';
+    document.getElementById('downloadBtn').style.display = chapters.some(c => c.status === 'done') ? '' : 'none';
+    document.getElementById('stepBar').style.display = '';
+  } else {
+    bookSections.forEach(id => document.getElementById(id).style.display = 'none');
+    sopSections.forEach(id => document.getElementById(id).style.display = '');
+    document.getElementById('downloadBtn').style.display = 'none';
+    document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('generateBtn').textContent = 'SOP generieren';
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('stepBar').style.display = 'none';
+    if (sopGeneratedContent) {
+      document.getElementById('sopResultSection').style.display = '';
+    }
+  }
+}
+
+// SOP Input Mode
+function setSopInputMode(mode) {
+  document.getElementById('sopUploadArea').style.display = mode === 'upload' ? '' : 'none';
+  document.getElementById('sopPasteArea').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('sopToggleUpload').classList.toggle('active', mode === 'upload');
+  document.getElementById('sopTogglePaste').classList.toggle('active', mode === 'paste');
+}
+
+// SOP File Upload
+function initSopDropZone() {
+  const dropZone = document.getElementById('sopDropZone');
+  const fileInput = document.getElementById('sopFileInput');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length > 0) await handleSopFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', async (e) => {
+    if (e.target.files.length > 0) {
+      await handleSopFile(e.target.files[0]);
+      fileInput.value = '';
+    }
+  });
+}
+
+async function handleSopFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  let text = '';
+
+  if (ext === 'docx') {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      text = result.value;
+    } catch (err) {
+      showToast('Fehler beim Lesen von ' + file.name, 'error');
+      return;
+    }
+  } else {
+    text = await file.text();
+  }
+
+  sopTranscript = text;
+  sopTranscriptName = file.name;
+  document.getElementById('sopTranscriptInfo').style.display = '';
+  document.getElementById('sopTranscriptName').textContent = file.name;
+  document.getElementById('sopTranscriptSize').textContent = formatFileSize(file.size);
+}
+
+function clearSopTranscript() {
+  sopTranscript = '';
+  sopTranscriptName = '';
+  document.getElementById('sopTranscriptInfo').style.display = 'none';
+}
+
+// SOP Generate
+async function generateSop() {
+  // Get transcript from either paste or upload
+  let transcript = sopTranscript;
+  const pasteText = document.getElementById('sopPasteText').value.trim();
+  if (pasteText) transcript = pasteText;
+
+  if (!transcript) {
+    showToast('Bitte eine Prozessbeschreibung eingeben oder hochladen.', 'error');
+    return;
+  }
+
+  const sopTitle = document.getElementById('sopTitle').value.trim() || 'Ohne Titel';
+  const audience = document.getElementById('sopAudience').value;
+  const model = document.getElementById('sopModel').value;
+  const audienceLabel = { einsteiger: 'Einsteiger', fortgeschritten: 'Fortgeschrittene', experte: 'Experten' }[audience];
+
+  const generateBtn = document.getElementById('generateBtn');
+  generateBtn.disabled = true;
+  generateBtn.textContent = 'Wird generiert...';
+
+  try {
+    const response = await fetch('/api/generate-sop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: storedApiKey,
+        model,
+        transcript,
+        sopTitle,
+        audience: audienceLabel
+      })
+    });
+
+    if (!response.ok) {
+      let errMsg = `HTTP ${response.status}`;
+      try { const err = await response.json(); errMsg = err.error || errMsg; } catch (_) {}
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    sopGeneratedContent = data.content;
+
+    // Show preview
+    const previewDiv = document.getElementById('sopPreview');
+    previewDiv.innerHTML = renderMarkdown(sopGeneratedContent);
+    document.getElementById('sopResultSection').style.display = '';
+    document.getElementById('sopResultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    showToast('SOP erfolgreich generiert!', 'success');
+  } catch (err) {
+    showToast('Fehler bei der SOP-Generierung: ' + err.message, 'error');
+  }
+
+  generateBtn.disabled = false;
+  generateBtn.textContent = 'SOP generieren';
+}
+
+function renderMarkdown(md) {
+  return md
+    .replace(/### (.+)/g, '<h3>$1</h3>')
+    .replace(/## (.+)/g, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+// Push to Notion
+async function pushSopToNotion() {
+  if (!sopGeneratedContent) {
+    showToast('Keine SOP zum Speichern vorhanden.', 'error');
+    return;
+  }
+
+  let notionToken = loadNotionToken();
+
+  if (!notionToken) {
+    // Show Notion token modal
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>Notion-Verbindung</h3>
+        <label style="margin-top:0;">Notion Integration Token</label>
+        <input type="password" id="modalNotionToken" placeholder="ntn_..." autocomplete="off" autofocus>
+        <div class="checkbox-row">
+          <input type="checkbox" id="rememberNotion" checked>
+          <label for="rememberNotion">Token für diesen Browser merken</label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="notionConfirm">Speichern</button>
+          <button class="btn btn-secondary" id="notionCancel">Abbrechen</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    return new Promise((resolve) => {
+      const input = document.getElementById('modalNotionToken');
+      const confirmBtn = document.getElementById('notionConfirm');
+      const cancelBtn = document.getElementById('notionCancel');
+
+      function closeModal() { overlay.remove(); }
+
+      confirmBtn.addEventListener('click', async () => {
+        const token = input.value.trim();
+        if (!token) { showToast('Bitte Token eingeben.', 'error'); input.focus(); return; }
+        if (document.getElementById('rememberNotion').checked) saveNotionToken(token);
+        notionToken = token;
+        closeModal();
+        await doPushToNotion(notionToken);
+      });
+
+      cancelBtn.addEventListener('click', closeModal);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') confirmBtn.click();
+        if (e.key === 'Escape') closeModal();
+      });
+
+      setTimeout(() => input.focus(), 50);
+    });
+  } else {
+    await doPushToNotion(notionToken);
+  }
+}
+
+async function doPushToNotion(notionToken) {
+  const sopTitle = document.getElementById('sopTitle').value.trim() || 'Ohne Titel';
+
+  try {
+    const response = await fetch('/api/push-to-notion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        notionToken,
+        title: sopTitle,
+        content: sopGeneratedContent,
+        tags: selectedTags,
+        relevance: selectedRelevance
+      })
+    });
+
+    if (!response.ok) {
+      let errMsg = `HTTP ${response.status}`;
+      try { const err = await response.json(); errMsg = err.error || errMsg; } catch (_) {}
+      throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+    showToast('SOP in Notion gespeichert!', 'success');
+
+    if (data.url) {
+      window.open(data.url, '_blank');
+    }
+  } catch (err) {
+    showToast('Fehler beim Speichern in Notion: ' + err.message, 'error');
+  }
+}
+
+// SOP DOCX Download
+async function downloadSopDocx() {
+  if (!sopGeneratedContent) return;
+
+  const sopTitle = document.getElementById('sopTitle').value.trim() || 'SOP';
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, PageBreak,
+            Footer } = docx;
+
+    const BRAND_GOLD = 'B5742A';
+    const BRAND_GOLD_LIGHT = 'E8C98A';
+    const BRAND_DARK = '1A1410';
+    const TEXT_DEFAULT = '2A2018';
+    const TEXT_MUTED = '7A6A58';
+    const SEPARATOR = 'D4C4B0';
+
+    const children = [];
+
+    // Title
+    children.push(
+      new Paragraph({ spacing: { before: 800 } }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: '+  ', font: 'Arial', size: 28, color: BRAND_GOLD_LIGHT }),
+          new TextRun({ text: 'STANDARD OPERATING PROCEDURE', font: 'Arial', size: 20, color: TEXT_MUTED })
+        ]
+      }),
+      new Paragraph({ spacing: { before: 200 } }),
+      new Paragraph({
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: BRAND_GOLD, space: 8 } },
+        children: [
+          new TextRun({ text: sopTitle, font: 'Arial', size: 36, color: BRAND_GOLD, bold: true })
+        ]
+      }),
+      new Paragraph({ spacing: { before: 200 } }),
+      new Paragraph({
+        children: [
+          new TextRun({ text: 'Erstellt: ', font: 'Arial', size: 18, color: TEXT_MUTED }),
+          new TextRun({ text: new Date().toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' }), font: 'Arial', size: 18, color: TEXT_DEFAULT })
+        ]
+      }),
+      new Paragraph({ spacing: { before: 600 } })
+    );
+
+    // Parse content
+    const lines = sopGeneratedContent.split('\n');
+    let li = 0;
+    while (li < lines.length) {
+      const line = lines[li].trimEnd();
+      if (line.trim() === '') { li++; continue; }
+
+      if (line.startsWith('## ')) {
+        children.push(
+          new Paragraph({ spacing: { before: 300 } }),
+          new Paragraph({
+            spacing: { before: 100, after: 80 },
+            children: [
+              new TextRun({ text: '+  ', font: 'Arial', size: 24, color: BRAND_GOLD_LIGHT, bold: true }),
+              new TextRun({ text: line.replace(/^## /, '').replace(/\*\*/g, ''), font: 'Arial', size: 24, color: BRAND_DARK, bold: true })
+            ]
+          })
+        );
+        li++; continue;
+      }
+
+      if (line.startsWith('### ')) {
+        children.push(
+          new Paragraph({ spacing: { before: 200 } }),
+          new Paragraph({
+            spacing: { before: 80, after: 60 },
+            children: [
+              new TextRun({ text: line.replace(/^### /, '').replace(/\*\*/g, ''), font: 'Arial', size: 22, color: BRAND_GOLD, bold: true })
+            ]
+          })
+        );
+        li++; continue;
+      }
+
+      // Paragraph
+      let pText = '';
+      while (li < lines.length && lines[li].trim() !== '' && !lines[li].startsWith('#')) {
+        if (pText) pText += ' ';
+        pText += lines[li].trim();
+        li++;
+      }
+      if (pText) {
+        children.push(new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { after: 120, line: 336 },
+          children: [new TextRun({ text: pText.replace(/\*\*/g, ''), font: 'Arial', size: 21, color: TEXT_DEFAULT })]
+        }));
+      }
+      if (li < lines.length && lines[li].trim() === '') li++;
+    }
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: { size: { width: 11906, height: 16838 }, margin: { top: 1701, bottom: 1701, left: 1418, right: 1418 } }
+        },
+        footers: {
+          default: new Footer({
+            children: [new Paragraph({
+              border: { top: { style: BorderStyle.SINGLE, size: 4, color: SEPARATOR, space: 6 } },
+              children: [
+                new TextRun({ text: '+  ', font: 'Arial', size: 16, color: BRAND_GOLD_LIGHT }),
+                new TextRun({ text: 'BERENT.AI', font: 'Arial', size: 16, color: TEXT_MUTED })
+              ]
+            })]
+          })
+        },
+        children
+      }]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const filename = 'SOP_' + sopTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß ]/g, '').replace(/\s+/g, '_') + '.docx';
+    saveAs(blob, filename);
+    showToast('SOP als DOCX heruntergeladen!', 'success');
+  } catch (err) {
+    console.error('DOCX-Fehler:', err);
+    showToast('Fehler beim Erstellen der DOCX: ' + err.message, 'error');
+  }
+}
+
+// Copy SOP to clipboard
+async function copySopToClipboard() {
+  if (!sopGeneratedContent) return;
+  try {
+    await navigator.clipboard.writeText(sopGeneratedContent);
+    showToast('SOP in Zwischenablage kopiert!', 'success');
+  } catch (err) {
+    showToast('Kopieren fehlgeschlagen.', 'error');
+  }
+}
+
+// Initialize SOP on load
+initSopSelectors();
+initSopDropZone();
 
 // ── Toast ──
 function showToast(message, type) {
