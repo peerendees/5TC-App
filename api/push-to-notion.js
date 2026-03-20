@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "notionToken, title, and content are required" });
   }
 
-  const dsId = dataSourceId || "1e231cc6-fd56-81fc-963c-000b0aa534b4";
+  const dsId = dataSourceId || "1e231cc6-fd56-808b-a5f8-c36928698cc2";
 
   // Build properties
   const properties = {
