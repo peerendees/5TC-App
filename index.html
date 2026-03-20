@@ -144,24 +144,28 @@
       opacity: 1;
     }
 
-    .theme-toggle {
-      margin-left: auto;
+    .header-btn {
       background: none;
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 0.35rem 0.7rem;
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: center;
       transition: all 0.3s;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 1.1rem;
     }
 
-    .theme-toggle:hover {
+    .header-btn:hover {
       border-color: var(--copper);
       color: var(--copper);
+    }
+
+    .theme-toggle {
+      margin-left: auto;
     }
 
     .theme-toggle .theme-icon { transition: transform 0.3s; }
@@ -1098,7 +1102,7 @@
       .drag-handle { width: 100%; height: 20px; justify-content: center; }
       .drag-handle::before { width: 20px; height: 10px; }
       .chapter-actions { margin-left: 0; }
-      .theme-toggle { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+      .header-btn { width: 2rem; height: 2rem; font-size: 0.9rem; }
     }
 
     /* Notion Preview Card */
@@ -1229,7 +1233,7 @@
 
     .profile-card-name {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
       color: var(--text);
       text-transform: uppercase;
       letter-spacing: 0.03em;
@@ -1239,7 +1243,7 @@
 
     .profile-card-db {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       white-space: nowrap;
       overflow: hidden;
@@ -1257,8 +1261,8 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 0.8rem;
-      padding: 0.2rem 0.35rem;
+      font-size: 1rem;
+      padding: 0.25rem 0.4rem;
       border-radius: 4px;
       transition: all 0.2s;
     }
@@ -1275,11 +1279,11 @@
 
     .profile-active-badge {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.55rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
       color: var(--copper);
       background: rgba(181, 116, 42, 0.12);
-      padding: 0.1rem 0.4rem;
+      padding: 0.15rem 0.5rem;
       border-radius: 4px;
       flex-shrink: 0;
     }
@@ -1291,7 +1295,8 @@
       gap: 0.75rem;
     }
 
-    .profile-form .form-row > div { flex: 1; }
+    .profile-form .form-row > div:first-child { flex: 2; }
+    .profile-form .form-row > div:last-child { flex: 3; }
 
     .property-editor {
       background: var(--bg3);
@@ -1313,21 +1318,21 @@
 
     .property-item-name {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.68rem;
+      font-size: 0.78rem;
       color: var(--text);
       min-width: 80px;
     }
 
     .property-item-type {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
+      font-size: 0.68rem;
       color: var(--text-muted);
       text-transform: uppercase;
     }
 
     .property-item-count {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.58rem;
+      font-size: 0.68rem;
       color: var(--copper);
       margin-left: auto;
     }
@@ -1366,7 +1371,7 @@
 <header id="appHeader">
   <div class="plus">+</div>
   <h1><span>Textschmiede</span> <sup id="headerBadge" title="5-Tage-Challenge">5TC</sup></h1>
-  <button class="theme-toggle" onclick="toggleTheme()" title="Theme wechseln">
+  <button class="header-btn theme-toggle" onclick="toggleTheme()" title="Theme wechseln">
     <span class="theme-icon">◐</span>
   </button>
 </header>
@@ -1584,7 +1589,7 @@
 
   <!-- SOP Settings (hidden by default) -->
   <div class="section" id="sopSettingsSection" style="display:none;">
-    <div class="section-title">SOP-Einstellungen <button class="config-btn" id="sopConfigBtn" onclick="showDbConfigModal()" title="Content-Profile verwalten" style="font-size: 1.4rem; margin-left: auto; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 20px;">&#9881;</button></div>
+    <div class="section-title">SOP-Einstellungen <button class="header-btn" id="sopConfigBtn" onclick="showDbConfigModal()" title="Content-Profile verwalten" style="margin-left: auto;">&#9881;</button></div>
     <label for="sopTitle">SOP-Titel</label>
     <input type="text" id="sopTitle" placeholder="z.B. Neuen Mitarbeiter onboarden">
     <div class="row">
@@ -1835,6 +1840,17 @@ function clearInactivityTimer() {
   document.addEventListener(evt, () => {
     if (!passwordRequired) resetInactivityTimer();
   }, { passive: true });
+});
+
+// ── Global ESC key handler for all modals ──
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const overlay = document.querySelector('.modal-overlay');
+    if (overlay) {
+      overlay.remove();
+      if (window._renderProfileManager) delete window._renderProfileManager;
+    }
+  }
 });
 
 // ── File Upload ──
@@ -2915,7 +2931,7 @@ function showProfileManager() {
     return `
       <div class="modal modal-wide profile-manager">
         <h3>Content-Profile</h3>
-        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
           Jedes Profil verbindet die Textschmiede mit einer Notion-Datenbank und definiert, welche Properties verfügbar sind.
         </p>
         <div class="profile-list">
