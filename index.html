@@ -1019,8 +1019,8 @@
       border: 1px solid var(--copper);
       border-radius: 12px;
       padding: 1.5rem;
-      width: 480px;
-      max-width: 92vw;
+      width: 420px;
+      max-width: 90vw;
     }
 
     .modal h3 {
@@ -1194,6 +1194,147 @@
     .config-btn:hover {
       color: var(--copper);
       opacity: 1;
+    }
+
+    /* Profile Manager */
+    .profile-manager { max-height: 70vh; overflow-y: auto; }
+
+    .profile-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .profile-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .profile-card:hover { border-color: var(--border2); }
+
+    .profile-card.active {
+      border-color: var(--copper);
+      background: rgba(181, 116, 42, 0.08);
+    }
+
+    .profile-card-info { flex: 1; min-width: 0; }
+
+    .profile-card-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .profile-card.active .profile-card-name { color: var(--copper-lt); }
+
+    .profile-card-db {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .profile-card-actions {
+      display: flex;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+
+    .profile-card-actions button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.35rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .profile-card-actions button:hover {
+      color: var(--copper);
+      background: rgba(181, 116, 42, 0.1);
+    }
+
+    .profile-card-actions button.danger:hover {
+      color: var(--danger);
+      background: rgba(192, 57, 43, 0.1);
+    }
+
+    .profile-active-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      color: var(--copper);
+      background: rgba(181, 116, 42, 0.12);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .profile-form { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .profile-form .form-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .profile-form .form-row > div { flex: 1; }
+
+    .property-editor {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .property-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .property-item:last-child { border-bottom: none; }
+
+    .property-item-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text);
+      min-width: 80px;
+    }
+
+    .property-item-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .property-item-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--copper);
+      margin-left: auto;
+    }
+
+    .modal-wide {
+      width: 520px !important;
+      max-width: 95vw !important;
     }
 
     /* SOP source info */
@@ -2627,11 +2768,13 @@ let sopGeneratedContent = '';
 let sopCurrentStep = 1;
 
 // ── Notion Content Profiles ──
-const CONTENT_PROFILES = {
+const DEFAULT_PROFILES = {
   sop: {
+    id: 'sop',
     name: 'SOP',
     label: 'Standard Operating Procedure',
     notionDbId: '1e231cc6-fd56-81fc-963c-000b0aa534b4',
+    builtin: true,
     properties: {
       tags: {
         label: 'Tags',
@@ -2652,22 +2795,47 @@ const CONTENT_PROFILES = {
   }
 };
 
-let activeProfile = loadProfileFromStorage() || CONTENT_PROFILES.sop;
-
-// Profile persistence
-function loadProfileFromStorage() {
+// Load all profiles (defaults + custom from localStorage)
+function loadAllProfiles() {
+  const profiles = JSON.parse(JSON.stringify(DEFAULT_PROFILES));
   try {
-    const saved = localStorage.getItem('ts5tc_profile');
-    if (!saved) return null;
-    return JSON.parse(saved);
-  } catch (e) { return null; }
+    const custom = JSON.parse(localStorage.getItem('ts5tc_custom_profiles') || '{}');
+    Object.assign(profiles, custom);
+    // Apply saved DB ID overrides for built-in profiles
+    const overrides = JSON.parse(localStorage.getItem('ts5tc_profile_overrides') || '{}');
+    for (const [id, override] of Object.entries(overrides)) {
+      if (profiles[id]) Object.assign(profiles[id], override);
+    }
+  } catch (e) {}
+  return profiles;
 }
 
-function saveProfileToStorage(profile) {
+function saveCustomProfiles(profiles) {
+  const custom = {};
+  for (const [id, p] of Object.entries(profiles)) {
+    if (!p.builtin) custom[id] = p;
+  }
+  try { localStorage.setItem('ts5tc_custom_profiles', JSON.stringify(custom)); } catch (e) {}
+}
+
+function saveProfileOverride(profileId, overrides) {
   try {
-    localStorage.setItem('ts5tc_profile', JSON.stringify(profile));
+    const existing = JSON.parse(localStorage.getItem('ts5tc_profile_overrides') || '{}');
+    existing[profileId] = { ...existing[profileId], ...overrides };
+    localStorage.setItem('ts5tc_profile_overrides', JSON.stringify(existing));
   } catch (e) {}
 }
+
+function loadActiveProfileId() {
+  return localStorage.getItem('ts5tc_active_profile') || 'sop';
+}
+
+function saveActiveProfileId(id) {
+  localStorage.setItem('ts5tc_active_profile', id);
+}
+
+let allProfiles = loadAllProfiles();
+let activeProfile = allProfiles[loadActiveProfileId()] || allProfiles.sop;
 
 let selectedTags = [];
 let selectedRelevance = [];
@@ -2732,48 +2900,267 @@ function updateSopStepBar(step) {
   }
 }
 
-// DB Config Modal
+// ── Profile Manager ──
 function showDbConfigModal() {
+  showProfileManager();
+}
+
+function showProfileManager() {
+  allProfiles = loadAllProfiles();
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
-  overlay.innerHTML = `
-    <div class="modal">
-      <h3>Notion-Datenbank</h3>
-      <label style="margin-top:0;">Datenbank-ID</label>
-      <input type="text" id="modalDbId" value="${activeProfile.notionDbId}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off">
-      <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.4;">
-        Die ID der Notion-Datenbank, in die SOPs gespeichert werden.
-      </p>
-      <div class="modal-actions">
-        <button class="btn btn-primary" id="dbConfigConfirm">Speichern</button>
-        <button class="btn btn-secondary" id="dbConfigCancel">Abbrechen</button>
+  overlay.id = 'profileManagerOverlay';
+
+  function renderProfileList() {
+    const profileEntries = Object.entries(allProfiles);
+    return `
+      <div class="modal modal-wide profile-manager">
+        <h3>Content-Profile</h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+          Jedes Profil verbindet die Textschmiede mit einer Notion-Datenbank und definiert, welche Properties verfügbar sind.
+        </p>
+        <div class="profile-list">
+          ${profileEntries.map(([id, p]) => `
+            <div class="profile-card${id === activeProfile.id ? ' active' : ''}" onclick="selectProfile('${id}')">
+              <div class="profile-card-info">
+                <div class="profile-card-name">${p.name}</div>
+                <div class="profile-card-db">${p.notionDbId || 'Keine DB-ID'}</div>
+              </div>
+              ${id === activeProfile.id ? '<span class="profile-active-badge">Aktiv</span>' : ''}
+              <div class="profile-card-actions">
+                <button onclick="event.stopPropagation(); editProfile('${id}')" title="Bearbeiten">✎</button>
+                ${!p.builtin ? `<button class="danger" onclick="event.stopPropagation(); deleteProfile('${id}')" title="Löschen">×</button>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="showNewProfileForm()">Neues Profil</button>
+          <button class="btn btn-secondary" onclick="closeProfileManager()">Schließen</button>
+        </div>
+      </div>
+    `;
+  }
+
+  overlay.innerHTML = renderProfileList();
+  document.body.appendChild(overlay);
+
+  // Expose re-render
+  window._renderProfileManager = () => {
+    const ov = document.getElementById('profileManagerOverlay');
+    if (ov) ov.innerHTML = renderProfileList();
+  };
+}
+
+function closeProfileManager() {
+  const ov = document.getElementById('profileManagerOverlay');
+  if (ov) ov.remove();
+  delete window._renderProfileManager;
+}
+
+function selectProfile(id) {
+  allProfiles = loadAllProfiles();
+  if (allProfiles[id]) {
+    activeProfile = allProfiles[id];
+    saveActiveProfileId(id);
+    showToast(`Profil "${activeProfile.name}" aktiviert.`, 'success');
+    if (window._renderProfileManager) window._renderProfileManager();
+  }
+}
+
+function deleteProfile(id) {
+  if (allProfiles[id]?.builtin) return;
+  if (!confirm(`Profil "${allProfiles[id].name}" wirklich löschen?`)) return;
+
+  delete allProfiles[id];
+  saveCustomProfiles(allProfiles);
+
+  if (activeProfile.id === id) {
+    activeProfile = allProfiles.sop;
+    saveActiveProfileId('sop');
+  }
+
+  showToast('Profil gelöscht.', 'success');
+  if (window._renderProfileManager) window._renderProfileManager();
+}
+
+function editProfile(id) {
+  const profile = allProfiles[id];
+  if (!profile) return;
+
+  const ov = document.getElementById('profileManagerOverlay');
+  if (!ov) return;
+
+  const propKeys = Object.keys(profile.properties || {});
+  const propHtml = propKeys.map(key => {
+    const prop = profile.properties[key];
+    const count = prop.options ? prop.options.length : 0;
+    return `
+      <div class="property-item">
+        <span class="property-item-name">${prop.label}</span>
+        <span class="property-item-type">${prop.type}</span>
+        <span class="property-item-count">${count} Optionen</span>
+      </div>
+    `;
+  }).join('');
+
+  ov.innerHTML = `
+    <div class="modal modal-wide profile-manager">
+      <h3>${profile.name} bearbeiten</h3>
+      <div class="profile-form">
+        <div class="form-row">
+          <div>
+            <label>Profilname</label>
+            <input type="text" id="editProfileName" value="${profile.name}" ${profile.builtin ? 'disabled' : ''}>
+          </div>
+          <div>
+            <label>Beschreibung</label>
+            <input type="text" id="editProfileLabel" value="${profile.label || ''}">
+          </div>
+        </div>
+        <div>
+          <label>Notion Datenbank-ID</label>
+          <input type="text" id="editProfileDbId" value="${profile.notionDbId || ''}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;">
+        </div>
+        <div>
+          <label>Properties (${propKeys.length})</label>
+          <div class="property-editor">${propHtml || '<span style="color: var(--text-muted); font-size: 0.78rem;">Keine Properties definiert</span>'}</div>
+          ${!profile.builtin ? '<button class="btn btn-secondary" style="margin-top: 0.5rem; font-size: 0.65rem; padding: 0.3rem 0.6rem;" onclick="addPropertyToProfile(\'' + id + '\')">Property hinzufügen</button>' : ''}
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top: 1rem;">
+        <button class="btn btn-primary" onclick="saveEditedProfile('${id}')">Speichern</button>
+        <button class="btn btn-secondary" onclick="window._renderProfileManager()">Zurück</button>
       </div>
     </div>
   `;
-  document.body.appendChild(overlay);
+}
 
-  const input = document.getElementById('modalDbId');
-  const confirmBtn = document.getElementById('dbConfigConfirm');
-  const cancelBtn = document.getElementById('dbConfigCancel');
+function saveEditedProfile(id) {
+  const profile = allProfiles[id];
+  if (!profile) return;
 
-  function closeModal() { overlay.remove(); }
+  const name = document.getElementById('editProfileName').value.trim();
+  const label = document.getElementById('editProfileLabel').value.trim();
+  const dbId = document.getElementById('editProfileDbId').value.trim();
 
-  confirmBtn.addEventListener('click', () => {
-    const newId = input.value.trim();
-    if (!newId) { showToast('Bitte eine Datenbank-ID eingeben.', 'error'); input.focus(); return; }
-    activeProfile.notionDbId = newId;
-    saveProfileToStorage(activeProfile);
-    closeModal();
-    showToast('Datenbank-ID gespeichert.', 'success');
-  });
+  if (!dbId) { showToast('Bitte eine Datenbank-ID eingeben.', 'error'); return; }
 
-  cancelBtn.addEventListener('click', closeModal);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') confirmBtn.click();
-    if (e.key === 'Escape') closeModal();
-  });
+  if (!profile.builtin && name) profile.name = name;
+  profile.label = label;
+  profile.notionDbId = dbId;
 
-  setTimeout(() => input.focus(), 50);
+  if (profile.builtin) {
+    saveProfileOverride(id, { notionDbId: dbId, label });
+  } else {
+    saveCustomProfiles(allProfiles);
+  }
+
+  if (activeProfile.id === id) activeProfile = profile;
+
+  showToast(`Profil "${profile.name}" gespeichert.`, 'success');
+  if (window._renderProfileManager) window._renderProfileManager();
+}
+
+function showNewProfileForm() {
+  const ov = document.getElementById('profileManagerOverlay');
+  if (!ov) return;
+
+  ov.innerHTML = `
+    <div class="modal modal-wide profile-manager">
+      <h3>Neues Profil erstellen</h3>
+      <div class="profile-form">
+        <div class="form-row">
+          <div>
+            <label>Profilname</label>
+            <input type="text" id="newProfileName" placeholder="z.B. Meeting Notes">
+          </div>
+          <div>
+            <label>Beschreibung</label>
+            <input type="text" id="newProfileLabel" placeholder="z.B. Besprechungsprotokoll">
+          </div>
+        </div>
+        <div>
+          <label>Notion Datenbank-ID</label>
+          <input type="text" id="newProfileDbId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;">
+        </div>
+        <div>
+          <label>Tags (kommagetrennt)</label>
+          <input type="text" id="newProfileTags" placeholder="z.B. Prozess, IT, Marketing, HR">
+        </div>
+        <div>
+          <label>Relevanz-Rollen (kommagetrennt)</label>
+          <input type="text" id="newProfileRelevance" placeholder="z.B. Exec, Team, Everyone">
+        </div>
+        <div>
+          <label>Status-Optionen (kommagetrennt)</label>
+          <input type="text" id="newProfileStatus" value="Not started, In Review, Active, Deprecated">
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top: 1rem;">
+        <button class="btn btn-primary" onclick="createNewProfile()">Erstellen</button>
+        <button class="btn btn-secondary" onclick="window._renderProfileManager()">Zurück</button>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => document.getElementById('newProfileName')?.focus(), 50);
+}
+
+function createNewProfile() {
+  const name = document.getElementById('newProfileName').value.trim();
+  const label = document.getElementById('newProfileLabel').value.trim();
+  const dbId = document.getElementById('newProfileDbId').value.trim();
+  const tagsStr = document.getElementById('newProfileTags').value.trim();
+  const relStr = document.getElementById('newProfileRelevance').value.trim();
+  const statusStr = document.getElementById('newProfileStatus').value.trim();
+
+  if (!name) { showToast('Bitte einen Profilnamen eingeben.', 'error'); return; }
+  if (!dbId) { showToast('Bitte eine Datenbank-ID eingeben.', 'error'); return; }
+
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+
+  if (allProfiles[id]) { showToast('Ein Profil mit diesem Namen existiert bereits.', 'error'); return; }
+
+  const parseCsv = (str) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  const profile = {
+    id,
+    name,
+    label,
+    notionDbId: dbId,
+    builtin: false,
+    properties: {
+      tags: { label: 'Tags', type: 'multi_select', options: parseCsv(tagsStr) },
+      relevance: { label: 'Relevanz', type: 'multi_select', options: parseCsv(relStr) },
+      status: { label: 'Status', type: 'status', options: parseCsv(statusStr) }
+    }
+  };
+
+  allProfiles[id] = profile;
+  saveCustomProfiles(allProfiles);
+
+  showToast(`Profil "${name}" erstellt!`, 'success');
+  if (window._renderProfileManager) window._renderProfileManager();
+}
+
+function addPropertyToProfile(id) {
+  const propName = prompt('Property-Name (z.B. Kategorie):');
+  if (!propName) return;
+
+  const optionsStr = prompt('Optionen (kommagetrennt, z.B. IT, Marketing, HR):');
+  const options = optionsStr ? optionsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  const key = propName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  allProfiles[id].properties[key] = {
+    label: propName,
+    type: 'multi_select',
+    options
+  };
+
+  saveCustomProfiles(allProfiles);
+  editProfile(id);
+  showToast(`Property "${propName}" hinzugefügt.`, 'success');
 }
 
 function toggleSopTag(el, tag) {
