@@ -44,10 +44,11 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 4. **Download** — DOCX-Export mit Kapitelvorschau im Browser
 
 ### SOP-Generator-Modus
-1. **SOP-Einstellungen** — Titel, Zielgruppe, KI-Modell, Tags, Relevanz
+1. **SOP-Einstellungen** — Titel, Zielgruppe, KI-Modell
 2. **Transkript** — Upload oder Text einfügen (ein Transkript pro SOP)
 3. **Generierung** — SOP generieren → Vorschau im Browser
-4. **Export** — In Notion speichern, DOCX-Download oder Kopieren
+4. **Vorschau und Tags** — KI schlägt Tags und Relevanz vor (vorausgewählt), Status wählen, Quellenangabe
+5. **Notion** — Gesamtvorschau aller Properties → In Notion speichern, DOCX-Download oder Kopieren
 
 ## Prompt-Vorlagen
 
@@ -86,6 +87,16 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 - Light Mode: Warme Sand-Töne (#F5F2EE) mit dunkleren Kupfer-Akzenten, Text #2E2318 (Kupfer-Dunkelvariation)
 - Toggle im Header (◐-Symbol), Auswahl wird in localStorage gespeichert
 
+### Content-Profile (Notion)
+- Profil-System für verschiedene Notion-Datenbanken (SOP als Default-Profil)
+- Jedes Profil definiert: Name, Notion-DB-ID, Properties (Tags, Relevanz, Status)
+- Built-in Profile (SOP) sind geschützt, DB-ID ist überschreibbar
+- Custom Profile werden in localStorage gespeichert (JSON)
+- Profil-Manager via Zahnrad-Icon: Liste, Bearbeiten, Neues Profil, Löschen
+- KI-gestützte Tag/Relevanz-Vorschläge nach SOP-Generierung (`/api/suggest-sop-meta`)
+- Notion-Vorschau vor dem Speichern (alle Properties auf einen Blick)
+- Quellenangabe (Dateiname) wird als Property in Notion gespeichert
+
 ### Responsive Design
 - Desktop (>1024px): Volles Layout, max-width 960px
 - Tablet (≤1024px): Kompaktere Abstände, gleiche Struktur
@@ -107,7 +118,8 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 index.html              # Komplette Frontend-App (HTML + CSS + JS)
 api/generate-chapter.js # Serverless API Proxy für Claude (Template-basiert)
 api/generate-sop.js     # Serverless API für SOP-Generierung
-api/push-to-notion.js   # Serverless API für Notion-Integration
+api/suggest-sop-meta.js # Serverless API für KI-gestützte Tag/Relevanz-Vorschläge
+api/push-to-notion.js   # Serverless API für Notion-Integration (Tags, Relevanz, Status, Quelle)
 package.json            # Nur @anthropic-ai/sdk als Dependency
 vercel.json             # Vercel-Konfiguration (Rewrites, Function-Timeout)
 CLAUDE.md               # Diese Datei — Projektdokumentation
