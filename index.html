@@ -28,6 +28,29 @@
       --danger: #C0392B;
     }
 
+    /* Light Mode Theme */
+    [data-theme="light"] {
+      --bg: #F5F2EE;
+      --bg2: #EDEAE4;
+      --bg3: #E3DFD8;
+      --border: #D1CBBD;
+      --border2: #C2BAA9;
+      --copper: #9A6320;
+      --copper-lt: #B5742A;
+      --copper-dk: #7a4e1c;
+      --gold: #9A6320;
+      --gold-dim: #B08840;
+      --text: #2A2520;
+      --text-muted: #7A6E5C;
+      --muted2: #9A8C78;
+      --danger: #B5332A;
+    }
+
+    [data-theme="light"] body::before { opacity: 0.015; }
+    [data-theme="light"] body::after {
+      background: radial-gradient(circle, rgba(181, 116, 42, 0.04) 0%, transparent 70%);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
@@ -120,6 +143,29 @@
     header h1 sup:hover {
       opacity: 1;
     }
+
+    .theme-toggle {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.35rem 0.7rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.3s;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--copper);
+      color: var(--copper);
+    }
+
+    .theme-toggle .theme-icon { transition: transform 0.3s; }
+    [data-theme="light"] .theme-toggle .theme-icon { transform: rotate(180deg); }
 
     /* Step Progress Bar */
     .step-bar {
@@ -1025,14 +1071,34 @@
     }
 
     /* Responsive */
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .container { max-width: 100%; padding: 1rem 1.5rem; }
+      header { padding: 1.25rem 1.5rem; }
+      .step-indicator { padding: 0.4rem 0.8rem; font-size: 0.62rem; }
+      .step-connector { width: 20px; }
+      .input-toggle { flex-direction: row; }
+      .mode-switch { flex-direction: row; }
+    }
+
+    /* Smartphone */
     @media (max-width: 640px) {
       .row { grid-template-columns: 1fr; }
       header { padding: 1rem; }
-      .container { padding: 1rem; }
-      .step-bar { padding: 0.75rem 1rem; gap: 0; }
-      .step-indicator { padding: 0.4rem 0.6rem; font-size: 0.6rem; }
+      header h1 { font-size: 1.3rem; }
+      .container { padding: 0.75rem; }
+      .section { padding: 1rem; }
+      .step-bar { padding: 0.75rem 0.5rem; gap: 0; }
+      .step-indicator { padding: 0.35rem 0.5rem; font-size: 0.58rem; }
       .step-indicator .step-label { display: none; }
-      .step-connector { width: 16px; }
+      .step-connector { width: 12px; }
+      .input-toggle { flex-direction: column; gap: 0.5rem; }
+      .mode-switch { flex-direction: column; gap: 0.5rem; }
+      .chapter-card { flex-direction: column; align-items: stretch; }
+      .drag-handle { width: 100%; height: 20px; justify-content: center; }
+      .drag-handle::before { width: 20px; height: 10px; }
+      .chapter-actions { margin-left: 0; }
+      .theme-toggle { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -1041,6 +1107,9 @@
 <header id="appHeader">
   <div class="plus">+</div>
   <h1><span>Textschmiede</span> <sup id="headerBadge" title="5-Tage-Challenge">5TC</sup></h1>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Theme wechseln">
+    <span class="theme-icon">◐</span>
+  </button>
 </header>
 
 <!-- Step Progress Bar -->
@@ -1126,18 +1195,18 @@
         <label for="outputTemplate">Vorlage</label>
         <select id="outputTemplate">
           <option value="buch">Buch — Ausführlicher Fließtext</option>
-          <option value="workbook">Workbook — Praxis & Übungen</option>
+          <option value="workbook">Workbook — Praxis und Übungen</option>
           <option value="training">Training — Didaktisch strukturiert</option>
-          <option value="newsletter">Newsletter — Kompakt & direkt</option>
+          <option value="newsletter">Newsletter — Kompakt und direkt</option>
         </select>
       </div>
       <div>
         <label for="toneSetting">Ton</label>
         <select id="toneSetting">
           <option value="professionell">Professionell</option>
-          <option value="locker">Locker & nahbar</option>
-          <option value="sachlich">Sachlich & nüchtern</option>
-          <option value="inspirierend">Inspirierend & motivierend</option>
+          <option value="locker">Locker und nahbar</option>
+          <option value="sachlich">Sachlich und nüchtern</option>
+          <option value="inspirierend">Inspirierend und motivierend</option>
         </select>
       </div>
     </div>
@@ -1372,6 +1441,21 @@ function setInputMode(mode) {
   }
   resetInactivityTimer();
 }
+
+// ── Theme Toggle ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('textschmiede-theme', next);
+}
+
+// Restore saved theme
+(function() {
+  const saved = localStorage.getItem('textschmiede-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
 
 // ── Password Toggle (triple-click on 5TC superscript) ──
 let headerClickCount = 0;
