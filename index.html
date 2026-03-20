@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5-Tage-Challenge Buch App</title>
+  <title>TEXTSCHMIEDE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -97,10 +97,115 @@
       color: var(--text);
       letter-spacing: 0.05em;
       text-transform: uppercase;
+      user-select: none;
     }
 
     header h1 span {
       color: var(--copper);
+    }
+
+    header h1 sup {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      vertical-align: super;
+      cursor: default;
+      user-select: none;
+      opacity: 0.6;
+      transition: opacity 0.3s, color 0.3s;
+      margin-left: 0.3rem;
+    }
+
+    header h1 sup:hover {
+      opacity: 1;
+    }
+
+    /* Step Progress Bar */
+    .step-bar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      cursor: default;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+
+    .step-indicator .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      background: var(--border);
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 500;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .step-indicator.active {
+      border-color: var(--copper);
+      background: rgba(181, 116, 42, 0.1);
+      color: var(--copper-lt);
+    }
+
+    .step-indicator.active .step-num {
+      background: var(--copper);
+      color: #fff;
+    }
+
+    .step-indicator.completed {
+      border-color: var(--copper-dk);
+      background: rgba(181, 116, 42, 0.05);
+      color: var(--gold-dim);
+    }
+
+    .step-indicator.completed .step-num {
+      background: var(--copper-dk);
+      color: var(--gold);
+    }
+
+    .step-connector {
+      width: 32px;
+      height: 1px;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .step-connector.completed {
+      background: var(--copper-dk);
     }
 
     .container {
@@ -225,6 +330,44 @@
 
     .btn-danger:hover { background: rgba(192, 57, 43, 0.15); }
 
+    /* Input Mode Toggle */
+    .input-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1rem;
+    }
+
+    .input-toggle .toggle-btn {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .input-toggle .toggle-btn:first-child {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+
+    .input-toggle .toggle-btn:last-child {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .input-toggle .toggle-btn.active {
+      background: rgba(181, 116, 42, 0.12);
+      border-color: var(--copper);
+      color: var(--copper-lt);
+    }
+
     /* Drop Zone */
     .drop-zone {
       border: 2px dashed var(--border);
@@ -255,6 +398,29 @@
 
     .drop-zone input[type="file"] { display: none; }
 
+    /* Paste Area */
+    .paste-area {
+      margin-bottom: 1rem;
+    }
+
+    .paste-area textarea {
+      min-height: 160px;
+      margin-bottom: 0.75rem;
+    }
+
+    .paste-area .paste-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .paste-area .paste-hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
     /* Chapter Cards */
     .chapter-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
@@ -263,13 +429,39 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 1rem;
-      cursor: grab;
-      transition: border-color 0.3s;
+      padding-left: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: stretch;
+      transition: border-color 0.3s, transform 0.2s, box-shadow 0.2s;
     }
 
     .chapter-card:hover { border-color: var(--border2); }
-    .chapter-card:active { cursor: grabbing; }
-    .chapter-card.dragging { opacity: 0.5; border-color: var(--copper); }
+    .chapter-card.dragging { opacity: 0.4; border-color: var(--copper); transform: scale(0.97); }
+    .chapter-card.drag-over-above { border-top: 2px solid var(--copper); }
+    .chapter-card.drag-over-below { border-bottom: 2px solid var(--copper); }
+
+    .drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      flex-shrink: 0;
+      cursor: grab;
+      color: var(--border2);
+      font-size: 1rem;
+      letter-spacing: 2px;
+      user-select: none;
+      transition: color 0.3s;
+    }
+
+    .drag-handle:active { cursor: grabbing; }
+    .drag-handle:hover { color: var(--copper); }
+
+    .chapter-card-body {
+      flex: 1;
+      min-width: 0;
+    }
 
     .chapter-card-header {
       display: flex;
@@ -347,24 +539,6 @@
     .status-processing { background: rgba(181, 116, 42, 0.2); color: var(--copper-lt); }
     .status-done { background: rgba(39, 174, 96, 0.2); color: #27AE60; }
     .status-error { background: rgba(192, 57, 43, 0.2); color: var(--danger); }
-
-    /* Add Text Area */
-    .add-text-section {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .add-text-row {
-      display: flex;
-      gap: 0.75rem;
-      align-items: flex-end;
-    }
-
-    .add-text-row textarea {
-      flex: 1;
-      min-height: 80px;
-    }
 
     /* Progress */
     .progress-bar-container {
@@ -515,30 +689,58 @@
       .row { grid-template-columns: 1fr; }
       header { padding: 1rem; }
       .container { padding: 1rem; }
+      .step-bar { padding: 0.75rem 1rem; gap: 0; }
+      .step-indicator { padding: 0.4rem 0.6rem; font-size: 0.6rem; }
+      .step-indicator .step-label { display: none; }
+      .step-connector { width: 16px; }
     }
   </style>
 </head>
 <body>
 
-<header>
+<header id="appHeader">
   <div class="plus">+</div>
-  <h1>5-Tage-Challenge <span>Buch App</span></h1>
+  <h1><span>Textschmiede</span> <sup id="headerBadge" title="5-Tage-Challenge">5TC</sup></h1>
 </header>
+
+<!-- Step Progress Bar -->
+<div class="step-bar" id="stepBar">
+  <div class="step-item">
+    <div class="step-indicator active" id="step-1">
+      <span class="step-num">1</span>
+      <span class="step-label">Einstellungen</span>
+    </div>
+  </div>
+  <div class="step-connector" id="conn-1"></div>
+  <div class="step-item">
+    <div class="step-indicator" id="step-2">
+      <span class="step-num">2</span>
+      <span class="step-label">Transkripte</span>
+    </div>
+  </div>
+  <div class="step-connector" id="conn-2"></div>
+  <div class="step-item">
+    <div class="step-indicator" id="step-3">
+      <span class="step-num">3</span>
+      <span class="step-label">Generierung</span>
+    </div>
+  </div>
+  <div class="step-connector" id="conn-3"></div>
+  <div class="step-item">
+    <div class="step-indicator" id="step-4">
+      <span class="step-num">4</span>
+      <span class="step-label">Download</span>
+    </div>
+  </div>
+</div>
 
 <div class="container">
 
-  <!-- API Key -->
-  <div class="section">
-    <div class="section-title">API-Konfiguration</div>
-    <label for="apiKey">Anthropic API Key</label>
-    <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
-  </div>
-
   <!-- Book Meta -->
   <div class="section">
-    <div class="section-title">Buchinformationen</div>
-    <label for="bookTitle">Buchtitel</label>
-    <input type="text" id="bookTitle" placeholder="Dein Buchtitel">
+    <div class="section-title">Projektinformationen</div>
+    <label for="bookTitle">Titel</label>
+    <input type="text" id="bookTitle" placeholder="Titel des Projekts">
     <div class="row">
       <div>
         <label for="bookSubtitle">Untertitel</label>
@@ -551,22 +753,33 @@
     </div>
   </div>
 
-  <!-- Upload -->
+  <!-- Upload / Paste -->
   <div class="section">
-    <div class="section-title">Transkripte hochladen</div>
+    <div class="section-title">Transkripte</div>
 
-    <div class="drop-zone" id="dropZone">
-      <div class="icon">+</div>
-      <p>Dateien hierher ziehen oder klicken zum Auswählen</p>
-      <p style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--border);">.txt, .md, .docx</p>
-      <input type="file" id="fileInput" multiple accept=".txt,.md,.docx">
+    <div class="input-toggle">
+      <button class="toggle-btn active" id="toggleUpload" onclick="setInputMode('upload')">Dateien hochladen</button>
+      <button class="toggle-btn" id="togglePaste" onclick="setInputMode('paste')">Text einfügen</button>
     </div>
 
-    <div class="add-text-section">
-      <label for="pasteText">Oder Text direkt einfügen:</label>
-      <div class="add-text-row">
-        <textarea id="pasteText" placeholder="Transkript hier einfügen..."></textarea>
-        <button class="btn btn-secondary" onclick="addPastedText()" style="align-self: flex-end;">Hinzufügen</button>
+    <!-- Upload Mode -->
+    <div id="uploadArea">
+      <div class="drop-zone" id="dropZone">
+        <div class="icon">+</div>
+        <p>Dateien hierher ziehen oder klicken zum Auswählen</p>
+        <p style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--border);">.txt, .md, .docx</p>
+        <input type="file" id="fileInput" multiple accept=".txt,.md,.docx">
+      </div>
+    </div>
+
+    <!-- Paste Mode -->
+    <div id="pasteArea" style="display:none;">
+      <div class="paste-area">
+        <textarea id="pasteText" placeholder="Transkript hier einfügen — jeder hinzugefügte Text wird ein eigenes Kapitel..."></textarea>
+        <div class="paste-actions">
+          <button class="btn btn-secondary" onclick="addPastedText()">Kapitel hinzufügen</button>
+          <span class="paste-hint">Jeder Text = ein Kapitel</span>
+        </div>
       </div>
     </div>
   </div>
@@ -590,8 +803,8 @@
 
   <!-- Actions -->
   <div class="actions">
-    <button class="btn btn-primary" id="generateBtn" onclick="showPasswordModal()">Buch generieren</button>
-    <button class="btn btn-primary" id="downloadBtn" onclick="downloadDocx()" style="display:none;">Buch herunterladen</button>
+    <button class="btn btn-primary" id="generateBtn" onclick="onGenerate()">Generieren</button>
+    <button class="btn btn-primary" id="downloadBtn" onclick="downloadDocx()" style="display:none;">Herunterladen</button>
     <button class="btn btn-secondary" id="resetBtn" onclick="resetApp()" style="display:none;">Eingaben zurücksetzen</button>
   </div>
 
@@ -601,6 +814,105 @@
 // ── State ──
 let chapters = [];
 let draggedIndex = null;
+let currentStep = 1;
+let passwordRequired = true;
+let inactivityTimer = null;
+let storedApiKey = '';
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// ── Step Bar ──
+function updateStepBar(step) {
+  currentStep = step;
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step-' + i);
+    const conn = document.getElementById('conn-' + (i - 1));
+    el.classList.remove('active', 'completed');
+    if (conn) conn.classList.remove('completed');
+
+    if (i < step) {
+      el.classList.add('completed');
+      if (conn) conn.classList.add('completed');
+    } else if (i === step) {
+      el.classList.add('active');
+      if (conn) conn.classList.add('completed');
+    }
+  }
+}
+
+// ── Input Mode Toggle ──
+function setInputMode(mode) {
+  const uploadArea = document.getElementById('uploadArea');
+  const pasteArea = document.getElementById('pasteArea');
+  const toggleUpload = document.getElementById('toggleUpload');
+  const togglePaste = document.getElementById('togglePaste');
+
+  if (mode === 'upload') {
+    uploadArea.style.display = '';
+    pasteArea.style.display = 'none';
+    toggleUpload.classList.add('active');
+    togglePaste.classList.remove('active');
+  } else {
+    uploadArea.style.display = 'none';
+    pasteArea.style.display = '';
+    toggleUpload.classList.remove('active');
+    togglePaste.classList.add('active');
+  }
+  resetInactivityTimer();
+}
+
+// ── Password Toggle (triple-click on 5TC superscript) ──
+let headerClickCount = 0;
+let headerClickTimer = null;
+
+document.getElementById('headerBadge').addEventListener('click', () => {
+  headerClickCount++;
+  clearTimeout(headerClickTimer);
+  headerClickTimer = setTimeout(() => { headerClickCount = 0; }, 500);
+
+  if (headerClickCount >= 3) {
+    headerClickCount = 0;
+    passwordRequired = !passwordRequired;
+
+    // Visual flash feedback on the badge
+    const badge = document.getElementById('headerBadge');
+    badge.style.color = passwordRequired ? 'var(--danger)' : 'var(--copper-lt)';
+    badge.style.opacity = '1';
+    setTimeout(() => {
+      badge.style.color = '';
+      badge.style.opacity = '';
+    }, 600);
+
+    if (!passwordRequired) {
+      resetInactivityTimer();
+    } else {
+      clearInactivityTimer();
+    }
+  }
+});
+
+// ── Inactivity Timer ──
+function resetInactivityTimer() {
+  clearInactivityTimer();
+  if (!passwordRequired) {
+    inactivityTimer = setTimeout(() => {
+      passwordRequired = true;
+    }, INACTIVITY_TIMEOUT);
+  }
+}
+
+function clearInactivityTimer() {
+  if (inactivityTimer) {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = null;
+  }
+}
+
+// Track user activity to reset inactivity timer
+['click', 'keydown', 'mousemove', 'touchstart'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if (!passwordRequired) resetInactivityTimer();
+  }, { passive: true });
+});
 
 // ── File Upload ──
 const dropZone = document.getElementById('dropZone');
@@ -650,6 +962,7 @@ async function handleFiles(files) {
     const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
     addChapter(title, text);
   }
+  updateStepBar(2);
 }
 
 function addPastedText() {
@@ -660,6 +973,7 @@ function addPastedText() {
   const num = chapters.length + 1;
   addChapter('Kapitel ' + num, text);
   textarea.value = '';
+  updateStepBar(2);
 }
 
 function addChapter(title, text) {
@@ -688,28 +1002,33 @@ function renderChapters() {
     const statusLabel = { pending: 'Ausstehend', processing: 'Wird verarbeitet...', done: 'Fertig', error: 'Fehler' }[ch.status];
 
     return `
-      <div class="chapter-card" draggable="true" data-index="${i}"
-           ondragstart="onDragStart(event, ${i})"
-           ondragover="onDragOver(event)"
+      <div class="chapter-card" data-index="${i}"
+           ondragover="onDragOver(event, ${i})"
            ondrop="onDrop(event, ${i})"
-           ondragend="onDragEnd(event)">
-        <div class="chapter-card-header">
-          <div class="chapter-number">${i + 1}</div>
-          <input class="chapter-title-input" value="${ch.title.replace(/"/g, '&quot;')}"
-                 onchange="chapters[${i}].title = this.value">
-          <button class="btn-danger" onclick="removeChapter(${i})">Entfernen</button>
-        </div>
-        <div class="chapter-preview">${preview}</div>
-        <div class="chapter-meta">
-          <span>${wordCount.toLocaleString('de-DE')} Wörter</span>
-          <span class="chapter-status ${statusClass}">${statusLabel}</span>
-        </div>
-        ${ch.generated ? `
-          <div class="chapter-meta" style="margin-top: 0.25rem;">
-            <button class="preview-toggle" onclick="togglePreview(${i})">Vorschau anzeigen/ausblenden</button>
+           ondragleave="onDragLeave(event)">
+        <div class="drag-handle" draggable="true"
+             ondragstart="onDragStart(event, ${i})"
+             ondragend="onDragEnd(event)"
+             title="Verschieben">⠿</div>
+        <div class="chapter-card-body">
+          <div class="chapter-card-header">
+            <div class="chapter-number">${i + 1}</div>
+            <input class="chapter-title-input" value="${ch.title.replace(/"/g, '&quot;')}"
+                   onchange="chapters[${i}].title = this.value">
+            <button class="btn-danger" onclick="removeChapter(${i})">Entfernen</button>
           </div>
-          <div class="preview-content" id="preview-${i}">${ch.generated.replace(/</g, '&lt;').substring(0, 2000)}${ch.generated.length > 2000 ? '\n\n... (gekürzt)' : ''}</div>
-        ` : ''}
+          <div class="chapter-preview">${preview}</div>
+          <div class="chapter-meta">
+            <span>${wordCount.toLocaleString('de-DE')} Wörter</span>
+            <span class="chapter-status ${statusClass}">${statusLabel}</span>
+          </div>
+          ${ch.generated ? `
+            <div class="chapter-meta" style="margin-top: 0.25rem;">
+              <button class="preview-toggle" onclick="togglePreview(${i})">Vorschau anzeigen/ausblenden</button>
+            </div>
+            <div class="preview-content" id="preview-${i}">${ch.generated.replace(/</g, '&lt;').substring(0, 2000)}${ch.generated.length > 2000 ? '\n\n... (gekürzt)' : ''}</div>
+          ` : ''}
+        </div>
       </div>
     `;
   }).join('');
@@ -718,6 +1037,7 @@ function renderChapters() {
 function removeChapter(index) {
   chapters.splice(index, 1);
   renderChapters();
+  if (chapters.length === 0) updateStepBar(1);
 }
 
 function togglePreview(index) {
@@ -728,35 +1048,78 @@ function togglePreview(index) {
 // ── Drag & Drop Reorder ──
 function onDragStart(e, index) {
   draggedIndex = index;
-  e.currentTarget.classList.add('dragging');
+  // Set drag data and style the parent card
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', index);
+  const card = e.target.closest('.chapter-card');
+  if (card) setTimeout(() => card.classList.add('dragging'), 0);
 }
 
-function onDragOver(e) {
+function onDragOver(e, targetIndex) {
   e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+  // Clear all drag-over indicators
+  document.querySelectorAll('.chapter-card').forEach(c => {
+    c.classList.remove('drag-over-above', 'drag-over-below');
+  });
+
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+
+  if (e.clientY < midY) {
+    card.classList.add('drag-over-above');
+  } else {
+    card.classList.add('drag-over-below');
+  }
+}
+
+function onDragLeave(e) {
+  const card = e.currentTarget;
+  card.classList.remove('drag-over-above', 'drag-over-below');
 }
 
 function onDrop(e, targetIndex) {
   e.preventDefault();
+  document.querySelectorAll('.chapter-card').forEach(c => {
+    c.classList.remove('drag-over-above', 'drag-over-below', 'dragging');
+  });
   if (draggedIndex === null || draggedIndex === targetIndex) return;
   const item = chapters.splice(draggedIndex, 1)[0];
-  chapters.splice(targetIndex, 0, item);
+  // Adjust target index after removal
+  const adjustedTarget = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const insertAt = e.clientY < rect.top + rect.height / 2 ? adjustedTarget : adjustedTarget + 1;
+  chapters.splice(Math.min(insertAt, chapters.length), 0, item);
   draggedIndex = null;
   renderChapters();
 }
 
 function onDragEnd(e) {
-  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.chapter-card').forEach(c => {
+    c.classList.remove('dragging', 'drag-over-above', 'drag-over-below');
+  });
   draggedIndex = null;
+}
+
+// ── Generate Flow: Generate Button → Password Modal → API Key Modal → Generate ──
+function onGenerate() {
+  if (chapters.length === 0) {
+    showToast('Bitte mindestens ein Transkript hinzufügen.', 'error');
+    return;
+  }
+
+  if (passwordRequired) {
+    showPasswordModal();
+  } else {
+    showApiKeyModal();
+  }
 }
 
 // ── Password Modal ──
 function showPasswordModal() {
-  const apiKey = document.getElementById('apiKey').value.trim();
-  const bookTitle = document.getElementById('bookTitle').value.trim();
-
-  if (!apiKey) { showToast('Bitte API Key eingeben.', 'error'); return; }
-  if (chapters.length === 0) { showToast('Bitte mindestens ein Transkript hinzufügen.', 'error'); return; }
-
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
@@ -765,7 +1128,7 @@ function showPasswordModal() {
       <label style="margin-top:0;">Bitte Kennwort eingeben:</label>
       <input type="password" id="modalPassword" placeholder="Kennwort..." autofocus>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="modalConfirm">Generieren</button>
+        <button class="btn btn-primary" id="modalConfirm">Weiter</button>
         <button class="btn btn-secondary" id="modalCancel">Abbrechen</button>
       </div>
     </div>
@@ -792,7 +1155,7 @@ function showPasswordModal() {
 
     if (pwInput.value === expectedPw) {
       closeModal();
-      generateBook();
+      showApiKeyModal();
     } else {
       showToast('Falsches Kennwort.', 'error');
       pwInput.value = '';
@@ -810,13 +1173,56 @@ function showPasswordModal() {
   setTimeout(() => pwInput.focus(), 50);
 }
 
+// ── API Key Modal ──
+function showApiKeyModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>API-Konfiguration</h3>
+      <label style="margin-top:0;">Anthropic API Key</label>
+      <input type="password" id="modalApiKey" placeholder="sk-ant-..." value="${storedApiKey}" autocomplete="off" autofocus>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="apiConfirm">Generieren</button>
+        <button class="btn btn-secondary" id="apiCancel">Abbrechen</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const apiInput = document.getElementById('modalApiKey');
+  const confirmBtn = document.getElementById('apiConfirm');
+  const cancelBtn = document.getElementById('apiCancel');
+
+  function closeModal() { overlay.remove(); }
+
+  function proceed() {
+    const key = apiInput.value.trim();
+    if (!key) {
+      showToast('Bitte API Key eingeben.', 'error');
+      apiInput.focus();
+      return;
+    }
+    storedApiKey = key;
+    closeModal();
+    generateBook(key);
+  }
+
+  confirmBtn.addEventListener('click', proceed);
+  cancelBtn.addEventListener('click', closeModal);
+  apiInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') proceed();
+    if (e.key === 'Escape') closeModal();
+  });
+
+  setTimeout(() => apiInput.focus(), 50);
+}
+
 // ── Generate Book ──
-async function generateBook() {
-  const apiKey = document.getElementById('apiKey').value.trim();
+async function generateBook(apiKey) {
   const bookTitle = document.getElementById('bookTitle').value.trim();
 
-  if (!apiKey) { showToast('Bitte API Key eingeben.', 'error'); return; }
-  if (chapters.length === 0) { showToast('Bitte mindestens ein Transkript hinzufügen.', 'error'); return; }
+  updateStepBar(3);
 
   const generateBtn = document.getElementById('generateBtn');
   const progressSection = document.getElementById('progressSection');
@@ -880,6 +1286,7 @@ async function generateBook() {
 
   const successCount = chapters.filter(c => c.status === 'done').length;
   if (successCount > 0) {
+    updateStepBar(4);
     document.getElementById('downloadBtn').style.display = '';
     showToast(`${successCount} Kapitel erfolgreich generiert!`, 'success');
   }
@@ -892,7 +1299,7 @@ async function generateBook() {
 // ── DOCX Generation ──
 async function downloadDocx() {
   try {
-  const bookTitle = document.getElementById('bookTitle').value.trim() || 'Mein Buch';
+  const bookTitle = document.getElementById('bookTitle').value.trim() || 'Ohne Titel';
   const bookSubtitle = document.getElementById('bookSubtitle').value.trim();
   const bookAuthor = document.getElementById('bookAuthor').value.trim();
 
@@ -1132,7 +1539,7 @@ async function downloadDocx() {
   const blob = await Packer.toBlob(doc);
   const filename = bookTitle.replace(/[^a-zA-Z0-9äöüÄÖÜß ]/g, '').replace(/\s+/g, '_') + '.docx';
   saveAs(blob, filename);
-  showToast('Buch wurde heruntergeladen!', 'success');
+  showToast('Dokument wurde heruntergeladen!', 'success');
 
   // Nach Download zurücksetzen
   resetApp();
@@ -1149,8 +1556,7 @@ function resetApp() {
 
   document.getElementById('bookTitle').value = '';
   document.getElementById('bookSubtitle').value = '';
-  // Autor bleibt erhalten
-  document.getElementById('apiKey').value && null; // API Key bleibt erhalten
+  // Autor und API Key bleiben erhalten
 
   document.getElementById('generateBtn').disabled = false;
   document.getElementById('downloadBtn').style.display = 'none';
@@ -1158,6 +1564,8 @@ function resetApp() {
   document.getElementById('progressSection').style.display = 'none';
   document.getElementById('progressBar').style.width = '0%';
   document.getElementById('progressText').textContent = 'Bereit';
+
+  updateStepBar(1);
 }
 
 // ── Toast ──
