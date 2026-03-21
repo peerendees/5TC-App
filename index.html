@@ -2513,7 +2513,8 @@ function onGenerate() {
     }
   }
 
-  if (passwordRequired) {
+  // SOP-Modus ist immer kennwortgeschützt
+  if (passwordRequired || currentMode === 'sop') {
     showPasswordModal();
     return;
   }
