@@ -745,6 +745,86 @@
       text-transform: uppercase;
     }
 
+    /* Speech Area */
+    .speech-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .mic-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--copper);
+      background: rgba(181, 116, 42, 0.08);
+      color: var(--copper);
+      font-size: 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .mic-btn:hover {
+      background: rgba(181, 116, 42, 0.15);
+      border-color: var(--copper-lt);
+    }
+
+    .mic-btn.recording {
+      border-color: #c0392b;
+      background: rgba(192, 57, 43, 0.12);
+      color: #c0392b;
+      animation: micPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.3); }
+      50% { box-shadow: 0 0 0 14px rgba(192, 57, 43, 0); }
+    }
+
+    .speech-status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .speech-status.active { color: #c0392b; }
+
+    .speech-transcript {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .speech-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      width: 100%;
+    }
+
+    .speech-actions .word-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .mic-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
     /* Chapter Cards */
     .chapter-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
@@ -1542,6 +1622,7 @@
     <div class="input-toggle">
       <button class="toggle-btn active" id="toggleUpload" onclick="setInputMode('upload')">Dateien hochladen</button>
       <button class="toggle-btn" id="togglePaste" onclick="setInputMode('paste')">Text einfügen</button>
+      <button class="toggle-btn" id="toggleSpeech" onclick="setInputMode('speech')">Einsprechen</button>
     </div>
 
     <!-- Upload Mode -->
@@ -1561,6 +1642,20 @@
         <div class="paste-actions">
           <button class="btn btn-secondary" onclick="addPastedText()">Kapitel hinzufügen</button>
           <span class="paste-hint">Jeder Text = ein Kapitel</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Speech Mode -->
+    <div id="speechArea" style="display:none;">
+      <div class="speech-area">
+        <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition('book')" title="Aufnahme starten">🎙</button>
+        <div class="speech-status" id="speechStatus">Zum Starten auf das Mikrofon klicken</div>
+        <textarea class="speech-transcript" id="speechText" placeholder="Dein gesprochener Text erscheint hier..."></textarea>
+        <div class="speech-actions">
+          <button class="btn btn-secondary" onclick="addSpokenText()">Kapitel übernehmen</button>
+          <button class="btn btn-secondary" onclick="clearSpeechText('book')" style="opacity: 0.6;">Leeren</button>
+          <span class="word-count" id="speechWordCount">0 Wörter</span>
         </div>
       </div>
     </div>
@@ -1637,6 +1732,7 @@
     <div class="input-toggle">
       <button class="toggle-btn active" id="sopToggleUpload" onclick="setSopInputMode('upload')">Datei hochladen</button>
       <button class="toggle-btn" id="sopTogglePaste" onclick="setSopInputMode('paste')">Text einfügen</button>
+      <button class="toggle-btn" id="sopToggleSpeech" onclick="setSopInputMode('speech')">Einsprechen</button>
     </div>
     <div id="sopUploadArea">
       <div class="drop-zone" id="sopDropZone">
@@ -1649,6 +1745,18 @@
     <div id="sopPasteArea" style="display:none;">
       <div class="paste-area">
         <textarea id="sopPasteText" placeholder="Prozessbeschreibung hier einfügen — beschreibe den Ablauf so detailliert wie möglich..." style="min-height: 200px;"></textarea>
+      </div>
+    </div>
+    <div id="sopSpeechArea" style="display:none;">
+      <div class="speech-area">
+        <button class="mic-btn" id="sopMicBtn" onclick="toggleSpeechRecognition('sop')" title="Aufnahme starten">🎙</button>
+        <div class="speech-status" id="sopSpeechStatus">Zum Starten auf das Mikrofon klicken</div>
+        <textarea class="speech-transcript" id="sopSpeechText" placeholder="Dein gesprochener Text erscheint hier..." style="min-height: 200px;"></textarea>
+        <div class="speech-actions">
+          <button class="btn btn-secondary" onclick="adoptSopSpeechText()">Text übernehmen</button>
+          <button class="btn btn-secondary" onclick="clearSpeechText('sop')" style="opacity: 0.6;">Leeren</button>
+          <span class="word-count" id="sopSpeechWordCount">0 Wörter</span>
+        </div>
       </div>
     </div>
     <div id="sopTranscriptInfo" style="display:none; margin-top: 0.75rem;">
@@ -1812,22 +1920,13 @@ function updateStepBar(step) {
 
 // ── Input Mode Toggle ──
 function setInputMode(mode) {
-  const uploadArea = document.getElementById('uploadArea');
-  const pasteArea = document.getElementById('pasteArea');
-  const toggleUpload = document.getElementById('toggleUpload');
-  const togglePaste = document.getElementById('togglePaste');
-
-  if (mode === 'upload') {
-    uploadArea.style.display = '';
-    pasteArea.style.display = 'none';
-    toggleUpload.classList.add('active');
-    togglePaste.classList.remove('active');
-  } else {
-    uploadArea.style.display = 'none';
-    pasteArea.style.display = '';
-    toggleUpload.classList.remove('active');
-    togglePaste.classList.add('active');
-  }
+  document.getElementById('uploadArea').style.display = mode === 'upload' ? '' : 'none';
+  document.getElementById('pasteArea').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('speechArea').style.display = mode === 'speech' ? '' : 'none';
+  document.getElementById('toggleUpload').classList.toggle('active', mode === 'upload');
+  document.getElementById('togglePaste').classList.toggle('active', mode === 'paste');
+  document.getElementById('toggleSpeech').classList.toggle('active', mode === 'speech');
+  if (mode !== 'speech') stopSpeechRecognition('book');
   resetInactivityTimer();
 }
 
@@ -3311,11 +3410,159 @@ function setMode(mode) {
 }
 
 // SOP Input Mode
+// ── Speech Recognition (Web Speech API) ──
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let speechRecognizers = { book: null, sop: null };
+let speechTexts = { book: '', sop: '' };
+
+// Disable speech buttons if not supported
+if (!SpeechRecognition) {
+  document.addEventListener('DOMContentLoaded', () => {
+    ['micBtn', 'sopMicBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) { btn.disabled = true; btn.title = 'Spracherkennung wird von diesem Browser nicht unterstützt'; }
+    });
+    ['toggleSpeech', 'sopToggleSpeech'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) { btn.title = 'Nicht unterstützt in diesem Browser'; btn.style.opacity = '0.4'; }
+    });
+  });
+}
+
+function toggleSpeechRecognition(mode) {
+  if (!SpeechRecognition) {
+    showToast('Spracherkennung wird von diesem Browser nicht unterstützt. Bitte Chrome oder Edge verwenden.', 'error');
+    return;
+  }
+  if (speechRecognizers[mode]) {
+    stopSpeechRecognition(mode);
+  } else {
+    startSpeechRecognition(mode);
+  }
+}
+
+function startSpeechRecognition(mode) {
+  if (!SpeechRecognition) return;
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'de-DE';
+
+  const micBtn = document.getElementById(mode === 'sop' ? 'sopMicBtn' : 'micBtn');
+  const statusEl = document.getElementById(mode === 'sop' ? 'sopSpeechStatus' : 'speechStatus');
+  const textArea = document.getElementById(mode === 'sop' ? 'sopSpeechText' : 'speechText');
+  const wordCountEl = document.getElementById(mode === 'sop' ? 'sopSpeechWordCount' : 'speechWordCount');
+
+  micBtn.classList.add('recording');
+  statusEl.textContent = 'Aufnahme läuft — sprich jetzt...';
+  statusEl.classList.add('active');
+
+  let finalText = speechTexts[mode] || '';
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalText += (finalText ? ' ' : '') + transcript.trim();
+        speechTexts[mode] = finalText;
+      } else {
+        interim += transcript;
+      }
+    }
+    textArea.value = finalText + (interim ? ' ' + interim : '');
+    const words = textArea.value.trim().split(/\s+/).filter(w => w).length;
+    wordCountEl.textContent = words + ' Wörter';
+    textArea.scrollTop = textArea.scrollHeight;
+  };
+
+  recognition.onerror = (event) => {
+    if (event.error === 'no-speech') return; // Normal, just waiting
+    if (event.error === 'aborted') return;
+    console.error('Speech error:', event.error);
+    showToast('Spracherkennungsfehler: ' + event.error, 'error');
+    stopSpeechRecognition(mode);
+  };
+
+  recognition.onend = () => {
+    // Auto-restart if still in recording mode (browser stops after silence)
+    if (speechRecognizers[mode]) {
+      try { recognition.start(); } catch (e) {}
+    }
+  };
+
+  try {
+    recognition.start();
+    speechRecognizers[mode] = recognition;
+  } catch (e) {
+    showToast('Mikrofon konnte nicht gestartet werden.', 'error');
+  }
+}
+
+function stopSpeechRecognition(mode) {
+  const recognition = speechRecognizers[mode];
+  if (recognition) {
+    speechRecognizers[mode] = null;
+    try { recognition.stop(); } catch (e) {}
+  }
+
+  const micBtn = document.getElementById(mode === 'sop' ? 'sopMicBtn' : 'micBtn');
+  const statusEl = document.getElementById(mode === 'sop' ? 'sopSpeechStatus' : 'speechStatus');
+  if (micBtn) micBtn.classList.remove('recording');
+  if (statusEl) {
+    statusEl.textContent = 'Aufnahme beendet';
+    statusEl.classList.remove('active');
+  }
+}
+
+function clearSpeechText(mode) {
+  speechTexts[mode] = '';
+  const textArea = document.getElementById(mode === 'sop' ? 'sopSpeechText' : 'speechText');
+  const wordCountEl = document.getElementById(mode === 'sop' ? 'sopSpeechWordCount' : 'speechWordCount');
+  if (textArea) textArea.value = '';
+  if (wordCountEl) wordCountEl.textContent = '0 Wörter';
+}
+
+function addSpokenText() {
+  const text = document.getElementById('speechText').value.trim();
+  if (!text) {
+    showToast('Kein Text vorhanden. Bitte erst einsprechen.', 'error');
+    return;
+  }
+  stopSpeechRecognition('book');
+  const title = 'Kapitel ' + (chapters.length + 1);
+  chapters.push({ title, transcript: text, filename: 'Spracheingabe', filesize: text.length, status: 'ready', generated: null });
+  renderChapters();
+  updateStepBar(2);
+  clearSpeechText('book');
+  showToast('Kapitel aus Spracheingabe hinzugefügt.', 'success');
+}
+
+function adoptSopSpeechText() {
+  const text = document.getElementById('sopSpeechText').value.trim();
+  if (!text) {
+    showToast('Kein Text vorhanden. Bitte erst einsprechen.', 'error');
+    return;
+  }
+  stopSpeechRecognition('sop');
+  sopTranscript = text;
+  sopTranscriptName = 'Spracheingabe';
+  const infoDiv = document.getElementById('sopTranscriptInfo');
+  document.getElementById('sopTranscriptName').textContent = 'Spracheingabe';
+  document.getElementById('sopTranscriptSize').textContent = text.length + ' Zeichen';
+  infoDiv.style.display = '';
+  showToast('Prozessbeschreibung aus Spracheingabe übernommen.', 'success');
+}
+
 function setSopInputMode(mode) {
   document.getElementById('sopUploadArea').style.display = mode === 'upload' ? '' : 'none';
   document.getElementById('sopPasteArea').style.display = mode === 'paste' ? '' : 'none';
+  document.getElementById('sopSpeechArea').style.display = mode === 'speech' ? '' : 'none';
   document.getElementById('sopToggleUpload').classList.toggle('active', mode === 'upload');
   document.getElementById('sopTogglePaste').classList.toggle('active', mode === 'paste');
+  document.getElementById('sopToggleSpeech').classList.toggle('active', mode === 'speech');
+  if (mode !== 'speech') stopSpeechRecognition('sop');
 }
 
 // SOP File Upload
