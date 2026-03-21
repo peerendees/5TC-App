@@ -37,7 +37,7 @@ export default async function handler(req, res) {
 
   const { apiKey, provider, model, transcript, sopTitle, audience } = req.body;
 
-  if (!apiKey || !transcript) {
+  if ((!apiKey && provider !== 'google-free') || !transcript) {
     return res.status(400).json({ error: "apiKey and transcript are required" });
   }
 

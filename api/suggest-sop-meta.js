@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
   const { apiKey, provider, model, sopContent, sopTitle, availableTags, availableRelevance } = req.body;
 
-  if (!apiKey || !sopContent) {
+  if ((!apiKey && provider !== 'google-free') || !sopContent) {
     return res.status(400).json({ error: "apiKey and sopContent are required" });
   }
 

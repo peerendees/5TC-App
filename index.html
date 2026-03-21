@@ -433,6 +433,72 @@
       color: var(--text);
     }
 
+    /* Inline API Key */
+    .api-key-inline {
+      margin-top: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .api-key-inline.visible { display: block; }
+    .api-key-inline .key-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .api-key-inline input {
+      flex: 1;
+      padding: 0.5rem 0.65rem;
+      font-size: 0.85rem;
+    }
+    .api-key-inline .key-save-btn {
+      background: var(--copper);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      transition: background 0.3s;
+    }
+    .api-key-inline .key-save-btn:hover { background: var(--copper-lt); }
+    .api-key-inline .key-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+    .api-key-inline .key-hint a {
+      color: var(--copper-lt);
+      text-decoration: none;
+    }
+    .api-key-inline .key-hint a:hover { text-decoration: underline; }
+    .api-key-inline .key-status {
+      font-size: 0.75rem;
+      color: var(--copper-lt);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .api-key-inline .key-status .key-delete {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .api-key-inline .key-status .key-delete:hover { color: var(--danger); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Checkbox row */
     .checkbox-row {
       display: flex;
@@ -1575,12 +1641,13 @@
       </div>
       <div>
         <label for="aiModel">KI-Modell</label>
-        <select id="aiModel">
+        <select id="aiModel" onchange="onModelChange('aiModel')">
           <optgroup label="Claude (Anthropic)">
             <option value="anthropic:claude-sonnet-4-20250514">Claude Sonnet 4 — Schnell</option>
             <option value="anthropic:claude-opus-4-20250514">Claude Opus 4 — Beste Qualität</option>
           </optgroup>
           <optgroup label="Gemini (Google)">
+            <option value="google-free:gemini-2.5-flash">✦ Gemini Flash — Kostenlos</option>
             <option value="google:gemini-2.5-flash">Gemini 2.5 Flash — Schnell</option>
             <option value="google:gemini-2.5-pro">Gemini 2.5 Pro — Beste Qualität</option>
           </optgroup>
@@ -1589,6 +1656,7 @@
             <option value="xai:grok-3">Grok 3 — Beste Qualität</option>
           </optgroup>
         </select>
+        <div class="api-key-inline" id="bookKeyInline"></div>
       </div>
     </div>
     <div class="row">
@@ -1720,12 +1788,13 @@
       </div>
       <div>
         <label for="sopModel">KI-Modell</label>
-        <select id="sopModel">
+        <select id="sopModel" onchange="onModelChange('sopModel')">
           <optgroup label="Claude (Anthropic)">
             <option value="anthropic:claude-sonnet-4-20250514">Claude Sonnet 4 — Schnell</option>
             <option value="anthropic:claude-opus-4-20250514">Claude Opus 4 — Beste Qualität</option>
           </optgroup>
           <optgroup label="Gemini (Google)">
+            <option value="google-free:gemini-2.5-flash">✦ Gemini Flash — Kostenlos</option>
             <option value="google:gemini-2.5-flash">Gemini 2.5 Flash — Schnell</option>
             <option value="google:gemini-2.5-pro">Gemini 2.5 Pro — Beste Qualität</option>
           </optgroup>
@@ -1734,6 +1803,7 @@
             <option value="xai:grok-3">Grok 3 — Beste Qualität</option>
           </optgroup>
         </select>
+        <div class="api-key-inline" id="sopKeyInline"></div>
       </div>
     </div>
   </div>
@@ -1845,9 +1915,10 @@ const TOTAL_STEPS = 5;
 
 // ── Provider Config ──
 const PROVIDER_CONFIG = {
-  anthropic: { label: 'Anthropic API Key', placeholder: 'sk-ant-...', name: 'Claude' },
-  google: { label: 'Google AI API Key', placeholder: 'AI...', name: 'Gemini' },
-  xai: { label: 'xAI API Key', placeholder: 'xai-...', name: 'Grok' }
+  anthropic: { label: 'Anthropic API Key', placeholder: 'sk-ant-...', name: 'Claude', helpUrl: 'https://console.anthropic.com/settings/keys' },
+  google: { label: 'Google AI API Key', placeholder: 'AI...', name: 'Gemini', helpUrl: 'https://aistudio.google.com/apikey' },
+  'google-free': { label: null, placeholder: null, name: 'Gemini (kostenlos)', helpUrl: null, isFree: true },
+  xai: { label: 'xAI API Key', placeholder: 'xai-...', name: 'Grok', helpUrl: 'https://console.x.ai/' }
 };
 
 // ── API Key Storage (per Provider) ──
@@ -1898,11 +1969,105 @@ function getSelectedModel(selectId) {
 }
 
 function getProviderApiKey(provider) {
+  if (provider === 'google-free') return '__FREE__';
   return providerKeys[provider] || loadProviderKey(provider);
 }
 
 // Legacy compatibility
 let storedApiKey = providerKeys.anthropic;
+
+// ── Inline API Key UI ──
+function onModelChange(selectId) {
+  const containerId = selectId === 'sopModel' ? 'sopKeyInline' : 'bookKeyInline';
+  const container = document.getElementById(containerId);
+  const { provider } = getSelectedModel(selectId);
+  const config = PROVIDER_CONFIG[provider] || PROVIDER_CONFIG.anthropic;
+
+  // Free tier — kein Key nötig
+  if (config.isFree) {
+    container.innerHTML = '<div class="key-status">✦ Kein API-Key nötig — kostenloser Zugang</div>';
+    container.classList.add('visible');
+    return;
+  }
+
+  const savedKey = getProviderApiKey(provider);
+  if (savedKey) {
+    // Key vorhanden — Status anzeigen
+    const masked = savedKey.substring(0, 8) + '···';
+    container.innerHTML = `
+      <div class="key-status">
+        ✓ ${config.name}-Key gespeichert (${masked})
+        <span class="key-delete" onclick="deleteInlineKey('${provider}', '${selectId}')" title="Key entfernen">×</span>
+      </div>`;
+    container.classList.add('visible');
+  } else {
+    // Kein Key — Eingabefeld
+    container.innerHTML = `
+      <div class="key-row">
+        <input type="password" id="inlineKey_${selectId}" placeholder="${config.placeholder}" autocomplete="off">
+        <button class="key-save-btn" onclick="saveInlineKey('${provider}', '${selectId}')">Speichern</button>
+      </div>
+      <div class="key-hint">API-Key für ${config.name} eingeben — <a href="${config.helpUrl}" target="_blank" rel="noopener">Wo finde ich den?</a></div>`;
+    container.classList.add('visible');
+    setTimeout(() => {
+      const inp = document.getElementById('inlineKey_' + selectId);
+      if (inp) inp.focus();
+    }, 50);
+  }
+  updateModelDropdownStatus(selectId);
+}
+
+function saveInlineKey(provider, selectId) {
+  const input = document.getElementById('inlineKey_' + selectId);
+  if (!input) return;
+  const key = input.value.trim();
+  if (!key) {
+    showToast('Bitte API-Key eingeben.', 'error');
+    input.focus();
+    return;
+  }
+  providerKeys[provider] = key;
+  saveProviderKey(provider, key);
+  showToast(PROVIDER_CONFIG[provider].name + '-Key gespeichert ✓', 'success');
+  onModelChange(selectId);
+}
+
+function deleteInlineKey(provider, selectId) {
+  providerKeys[provider] = '';
+  clearProviderKey(provider);
+  showToast(PROVIDER_CONFIG[provider].name + '-Key entfernt', 'success');
+  onModelChange(selectId);
+}
+
+// Dropdown-Optionen mit Status-Indikatoren versehen
+function updateModelDropdownStatus(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  Array.from(select.options).forEach(opt => {
+    if (!opt.value) return;
+    const colonIdx = opt.value.indexOf(':');
+    const prov = opt.value.substring(0, colonIdx);
+    const conf = PROVIDER_CONFIG[prov];
+    // Originaltext ohne Prefix wiederherstellen
+    let text = opt.textContent.replace(/^[✓🔑✦]\s*/, '');
+    if (conf && conf.isFree) {
+      opt.textContent = '✦ ' + text;
+    } else if (getProviderApiKey(prov)) {
+      opt.textContent = '✓ ' + text;
+    } else {
+      opt.textContent = '🔑 ' + text;
+    }
+  });
+}
+
+// Init: Status bei Seitenlade setzen
+function initModelDropdowns() {
+  updateModelDropdownStatus('aiModel');
+  updateModelDropdownStatus('sopModel');
+  // Inline-Bereich für aktuell gewähltes Modell anzeigen
+  onModelChange('aiModel');
+  onModelChange('sopModel');
+}
 
 // ── Helpers ──
 function formatFileSize(bytes) {
@@ -1979,6 +2144,9 @@ function toggleTheme() {
   const saved = localStorage.getItem('textschmiede-theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
 })();
+
+// Init model dropdowns with key status
+document.addEventListener('DOMContentLoaded', initModelDropdowns);
 
 // ── Password Toggle (triple-click on 5TC superscript) ──
 let headerClickCount = 0;
@@ -2330,17 +2498,15 @@ function onDragEnd(e) {
   draggedIndex = null;
 }
 
-// ── Generate Flow: Generate → Password → API Key → Struktur → Generate ──
+// ── Generate Flow: Generate → (Password) → Check Key → Struktur → Generate ──
 function onGenerate() {
   if (currentMode === 'sop') {
-    // SOP mode: check transcript, then password, then API key, then generate
     const pasteText = document.getElementById('sopPasteText').value.trim();
     if (!sopTranscript && !pasteText) {
       showToast('Bitte eine Prozessbeschreibung eingeben oder hochladen.', 'error');
       return;
     }
   } else {
-    // Book mode
     if (chapters.length === 0) {
       showToast('Bitte mindestens ein Transkript hinzufügen.', 'error');
       return;
@@ -2349,8 +2515,35 @@ function onGenerate() {
 
   if (passwordRequired) {
     showPasswordModal();
+    return;
+  }
+
+  const selectId = currentMode === 'sop' ? 'sopModel' : 'aiModel';
+  const { provider } = getSelectedModel(selectId);
+  const key = getProviderApiKey(provider);
+
+  if (provider === 'google-free') {
+    // Kostenlos — kein Key nötig, direkt starten
+    if (currentMode === 'sop') {
+      generateSop();
+    } else {
+      showStructureStep();
+    }
+    return;
+  }
+
+  if (!key) {
+    showToast('Bitte zuerst den API-Key für ' + (PROVIDER_CONFIG[provider]?.name || provider) + ' eingeben.', 'error');
+    // Inline-Bereich aufklappen
+    onModelChange(selectId);
+    return;
+  }
+
+  // Key vorhanden — direkt weiter
+  if (currentMode === 'sop') {
+    generateSop();
   } else {
-    showApiKeyModal();
+    showStructureStep();
   }
 }
 
@@ -2530,7 +2723,17 @@ function showPasswordModal() {
 
     if (pwInput.value === expectedPw) {
       closeModal();
-      showApiKeyModal();
+      // Nach Kennwort: prüfe ob Key vorhanden, dann starten
+      const selectId = currentMode === 'sop' ? 'sopModel' : 'aiModel';
+      const { provider } = getSelectedModel(selectId);
+      const key = getProviderApiKey(provider);
+      if (provider === 'google-free' || key) {
+        if (currentMode === 'sop') generateSop();
+        else showStructureStep();
+      } else {
+        showToast('Bitte zuerst den API-Key für ' + (PROVIDER_CONFIG[provider]?.name || provider) + ' eingeben.', 'error');
+        onModelChange(selectId);
+      }
     } else {
       showToast('Falsches Kennwort.', 'error');
       pwInput.value = '';

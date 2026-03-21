@@ -5,6 +5,13 @@
  */
 
 export async function callProvider({ provider, apiKey, model, systemPrompt, userPrompt, maxTokens = 8000, jsonMode = false }) {
+  // google-free uses server-side key from env
+  if (provider === 'google-free') {
+    const serverKey = process.env.GEMINI_API_KEY;
+    if (!serverKey) throw new Error('Gemini Free ist nicht konfiguriert. Bitte den Betreiber kontaktieren.');
+    return await callGoogle({ apiKey: serverKey, model, systemPrompt, userPrompt, maxTokens, jsonMode });
+  }
+
   if (!apiKey) throw new Error('API Key fehlt.');
   if (!model) throw new Error('Kein Modell ausgewählt.');
 
