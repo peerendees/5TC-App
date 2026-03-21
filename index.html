@@ -145,18 +145,23 @@
     }
 
     .header-btn {
-      background: none;
+      background: var(--bg);
       border: 1px solid var(--border);
-      width: 2.4rem;
-      height: 2.4rem;
-      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 0.4rem;
       transition: all 0.3s;
       color: var(--text-muted);
-      font-size: 1.1rem;
+    }
+
+    .header-btn svg {
+      width: 1rem;
+      height: 1rem;
     }
 
     .header-btn:hover {
@@ -168,8 +173,11 @@
       margin-left: auto;
     }
 
-    .theme-toggle .theme-icon { transition: transform 0.3s; }
-    [data-theme="light"] .theme-toggle .theme-icon { transform: rotate(180deg); }
+    .theme-toggle .icon-sun,
+    .theme-toggle .icon-moon { transition: opacity 0.3s; }
+    .theme-toggle .icon-moon { display: none; }
+    [data-theme="light"] .theme-toggle .icon-sun { display: none; }
+    [data-theme="light"] .theme-toggle .icon-moon { display: block; }
 
     /* Step Progress Bar */
     .step-bar {
@@ -1451,8 +1459,9 @@
 <header id="appHeader">
   <div class="plus">+</div>
   <h1><span>Textschmiede</span> <sup id="headerBadge" title="5-Tage-Challenge">5TC</sup></h1>
-  <button class="header-btn theme-toggle" onclick="toggleTheme()" title="Theme wechseln">
-    <span class="theme-icon">◐</span>
+  <button class="header-btn theme-toggle" onclick="toggleTheme()" aria-label="Farbschema wechseln" title="Theme wechseln">
+    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
 </header>
 
@@ -1697,7 +1706,7 @@
 
   <!-- SOP Settings (hidden by default) -->
   <div class="section" id="sopSettingsSection" style="display:none;">
-    <div class="section-title">SOP-Einstellungen <button class="header-btn" id="sopConfigBtn" onclick="showDbConfigModal()" title="Content-Profile verwalten" style="margin-left: auto;">&#9881;</button></div>
+    <div class="section-title">SOP-Einstellungen <button class="header-btn" id="sopConfigBtn" onclick="showDbConfigModal()" title="Content-Profile verwalten" style="margin-left: auto;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div>
     <label for="sopTitle">SOP-Titel</label>
     <input type="text" id="sopTitle" placeholder="z.B. Neuen Mitarbeiter onboarden">
     <div class="row">
