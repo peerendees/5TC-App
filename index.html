@@ -1689,7 +1689,10 @@
     <div class="progress-bar-container">
       <div class="progress-bar" id="progressBar"></div>
     </div>
-    <div class="progress-text" id="progressText">Bereit</div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="progress-text" id="progressText">Bereit</div>
+      <div class="progress-text" id="progressTimer" style="color: var(--copper);"></div>
+    </div>
   </div>
 
   <!-- SOP Settings (hidden by default) -->
@@ -1897,6 +1900,29 @@ function formatFileSize(bytes) {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
   return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60);
+  const rest = s % 60;
+  return m + ':' + String(rest).padStart(2, '0') + ' Min';
+}
+
+// Live timer for generation progress
+let _genTimer = null;
+let _genStart = 0;
+function startGenTimer(targetEl) {
+  _genStart = Date.now();
+  _genTimer = setInterval(() => {
+    const el = typeof targetEl === 'string' ? document.getElementById(targetEl) : targetEl;
+    if (el) el.textContent = formatDuration(Date.now() - _genStart);
+  }, 1000);
+}
+function stopGenTimer() {
+  if (_genTimer) { clearInterval(_genTimer); _genTimer = null; }
+  return Date.now() - _genStart;
 }
 
 // ── Step Bar ──
@@ -2601,6 +2627,8 @@ async function generateBook(apiKey) {
 
   generateBtn.disabled = true;
   progressSection.style.display = 'block';
+  document.getElementById('progressTimer').textContent = '';
+  startGenTimer('progressTimer');
 
   for (let i = 0; i < chapters.length; i++) {
     chapters[i].status = 'processing';
@@ -2657,14 +2685,16 @@ async function generateBook(apiKey) {
     renderChapters();
   }
 
+  const totalDuration = stopGenTimer();
   progressBar.style.width = '100%';
   progressText.textContent = 'Alle Kapitel verarbeitet!';
+  document.getElementById('progressTimer').textContent = formatDuration(totalDuration);
 
   const successCount = chapters.filter(c => c.status === 'done').length;
   if (successCount > 0) {
     updateStepBar(5);
     document.getElementById('downloadBtn').style.display = '';
-    showToast(`${successCount} Kapitel erfolgreich generiert!`, 'success');
+    showToast(`${successCount} Kapitel erfolgreich generiert! (${formatDuration(totalDuration)})`, 'success');
   }
 
   // Generieren bleibt deaktiviert, Reset wird sichtbar
@@ -2941,6 +2971,8 @@ function resetApp() {
   document.getElementById('structureSection').style.display = 'none';
   document.getElementById('progressBar').style.width = '0%';
   document.getElementById('progressText').textContent = 'Bereit';
+  document.getElementById('progressTimer').textContent = '';
+  stopGenTimer();
 
   updateStepBar(1);
 }
@@ -3640,6 +3672,10 @@ async function generateSop() {
   generateBtn.disabled = true;
   generateBtn.textContent = 'Wird generiert...';
   updateSopStepBar(3);
+  const sopTimerStart = Date.now();
+  const sopTimerInterval = setInterval(() => {
+    generateBtn.textContent = 'Wird generiert... ' + formatDuration(Date.now() - sopTimerStart);
+  }, 1000);
 
   try {
     const response = await fetch('/api/generate-sop', {
@@ -3712,8 +3748,11 @@ async function generateSop() {
 
     updateSopStepBar(4);
     document.getElementById('sopResultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    showToast('SOP erfolgreich generiert!', 'success');
+    clearInterval(sopTimerInterval);
+    const sopDuration = formatDuration(Date.now() - sopTimerStart);
+    showToast(`SOP erfolgreich generiert! (${sopDuration})`, 'success');
   } catch (err) {
+    clearInterval(sopTimerInterval);
     showToast('Fehler bei der SOP-Generierung: ' + err.message, 'error');
     updateSopStepBar(2);
   }
