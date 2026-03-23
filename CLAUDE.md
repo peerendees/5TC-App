@@ -10,7 +10,7 @@ Die Textschmiede ist eine Single-Page-Webanwendung zur Generierung ausgearbeitet
 ## Architektur
 
 - **Single-File Frontend:** `index.html` — gesamte App (HTML, CSS, JS) in einer Datei
-- **Serverless API:** `api/generate-chapter.js` — Vercel Serverless Function, nutzt Claude API via `@anthropic-ai/sdk`
+- **Serverless API:** `api/generate-chapter.js`, `api/generate-sop.js` — Vercel Serverless Functions mit Multi-Provider-Routing (Claude, Gemini, Grok)
 - **Kein Build-Prozess:** CDN-basierte Dependencies (docx, FileSaver, mammoth)
 
 ## Technologie-Stack
@@ -19,7 +19,7 @@ Die Textschmiede ist eine Single-Page-Webanwendung zur Generierung ausgearbeitet
 |---------|-------------|
 | Frontend | Vanilla HTML/CSS/JS (kein Framework) |
 | Fonts | Google Fonts: Bebas Neue, Lora, JetBrains Mono |
-| API | Anthropic Claude API (`claude-sonnet-4-20250514`) |
+| API | Multi-Provider: Claude (Anthropic), Gemini (Google), Grok (xAI) |
 | DOCX-Erzeugung | docx.js (Browser-seitig) |
 | Datei-Upload | mammoth.js (.docx → Text), native FileReader (.txt, .md) |
 | Deployment | Vercel (Serverless Functions, max 120s Timeout) |
@@ -40,7 +40,7 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 ### Buchkapitel-Modus
 1. **Einstellungen** — Titel, Untertitel, Autor, Zielgruppe, KI-Modell, Vorlage, Ton, Ausführlichkeit
 2. **Transkripte** — Upload (Drag und Drop) oder Text einfügen (Toggle), Kapitel per Drag und Drop sortierbar
-3. **Generierung** — "Generieren"-Button → Kennwort-Modal → API-Key-Modal → kapitelweise Verarbeitung
+3. **Generierung** — "Generieren"-Button → kapitelweise Verarbeitung (Kennwort im Buchmodus standardmäßig deaktiviert)
 4. **Download** — DOCX-Export mit Kapitelvorschau im Browser
 
 ### SOP-Generator-Modus
@@ -62,14 +62,20 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 ## Wichtige Mechanismen
 
 ### Kennwort-Schutz
-- Dynamisches Kennwort: `8Lp!n3#` + 2-stelliger Tag + 2-stellige Stunde (Europe/Berlin)
-- Validierung via `Intl.DateTimeFormat.formatToParts()` mit `hourCycle: 'h23'`
-- Toggle: Dreifachklick auf ⁵ᵀᶜ im Header deaktiviert den Schutz (dezentes Kupfer-Feedback)
+- **Buchmodus:** Kennwort standardmäßig deaktiviert (`passwordRequired = false`) — Nutzer bringen eigene API-Keys mit
+- **SOP-Modus:** Immer kennwortgeschützt, serverseitige Validierung via `/api/validate-password`
+- Kennwort-Prefix wird als Vercel-Umgebungsvariable `PASSWORD_PREFIX` gespeichert (kein clientseitiges Hardcoding)
+- Dynamisches Kennwort: Prefix + 2-stelliger Tag + 2-stellige Stunde (Europe/Berlin)
+- Toggle: Dreifachklick auf ⁵ᵀᶜ im Header reaktiviert den Schutz im Buchmodus (dezentes Kupfer-Feedback)
 - Auto-Reaktivierung nach 5 Minuten Inaktivität
 
-### API-Key-Verwaltung
-- API-Key wird zur Laufzeit eingegeben (kein serverseitiges Secret)
-- Optional im Browser speicherbar (localStorage, verschlüsselt)
+### Multi-Provider API-System
+- Nutzer bringen eigene API-Keys mit (Claude, Gemini, Grok) oder nutzen den kostenlosen Gemini Flash Tier
+- **Provider und Modelle:** Claude Sonnet 4, Claude Opus 4, Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini Flash (Kostenlos), Grok 3 Mini, Grok 3
+- Inline API-Key-Eingabe: kein Modal, Key-Input erscheint direkt unter dem Modell-Selektor
+- Status-Indikatoren im Dropdown: 🔓 (Key gespeichert), 🗝️ (Key benötigt), ✦ (kostenlos)
+- Gemini Flash (Kostenlos) nutzt serverseitige `GEMINI_API_KEY` Umgebungsvariable
+- Keys optional im Browser speicherbar (localStorage, verschlüsselt) — pro Provider getrennt
 - Notion Integration Token separat speicherbar
 
 ### Kapitel-Management
@@ -81,6 +87,10 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 ### Step Progress Bar
 - 5 Schritte: Einstellungen → Transkripte → Struktur → Generierung → Download
 - Visuell wie Buttons, aber nicht klickbar (rein informativer Status)
+
+### Smart Back-Navigation
+- `← berent.ai` Link im Header mit `goBackToSite()` Funktion
+- Fallback-Kette: `window.close()` (wenn via `window.opener` geöffnet) → `history.back()` (wenn Referrer berent.ai) → Navigation zu berent.ai
 
 ### Theme-System
 - Dark Mode (Standard): Neutrale Dunkeltöne mit Kupfer-Akzenten
@@ -116,8 +126,9 @@ Die App folgt der BERENT.AI CI (siehe Skill `berent-ci`):
 
 ```
 index.html              # Komplette Frontend-App (HTML + CSS + JS)
-api/generate-chapter.js # Serverless API Proxy für Claude (Template-basiert)
-api/generate-sop.js     # Serverless API für SOP-Generierung
+api/generate-chapter.js # Serverless API für Kapitelgenerierung (Multi-Provider-Routing)
+api/generate-sop.js     # Serverless API für SOP-Generierung (Multi-Provider-Routing)
+api/validate-password.js # Serverseitige Kennwort-Validierung (nutzt PASSWORD_PREFIX Env Var)
 api/suggest-sop-meta.js # Serverless API für KI-gestützte Tag/Relevanz-Vorschläge
 api/push-to-notion.js   # Serverless API für Notion-Integration (Tags, Relevanz, Status, Quelle)
 package.json            # Nur @anthropic-ai/sdk als Dependency
@@ -126,10 +137,17 @@ CLAUDE.md               # Diese Datei — Projektdokumentation
 .gitignore              # node_modules
 ```
 
+## Umgebungsvariablen (Vercel)
+
+| Variable | Beschreibung |
+|----------|-------------|
+| `GEMINI_API_KEY` | Google AI API-Key für den kostenlosen Gemini Flash Tier |
+| `PASSWORD_PREFIX` | Kennwort-Prefix für SOP-Zugangsschutz |
+
 ## Hinweise für Entwicklung
 
 - `index.html` ist eine große Single-File-App — bei Änderungen gezielt mit Edit-Tool arbeiten
-- API-Key wird zur Laufzeit vom Nutzer eingegeben (kein serverseitiges Secret)
+- API-Keys werden zur Laufzeit vom Nutzer eingegeben oder via kostenlosem Gemini Flash Tier serverseitig bereitgestellt
 - Vercel-Timeout für die Generate-Function ist auf 120s gesetzt (lange Kapitel brauchen Zeit)
 - Fonts kommen via Google Fonts CDN — kein lokales Hosting
 - DOCX-Generierung läuft komplett im Browser (docx.js + FileSaver)
