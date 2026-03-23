@@ -27,9 +27,32 @@ export async function callProvider({ provider, apiKey, model, systemPrompt, user
         throw new Error(`Unbekannter Provider: ${provider}`);
     }
   } catch (error) {
-    // Normalize error messages
-    const msg = error?.message || error?.error?.message || String(error);
-    throw new Error(msg);
+    // Normalize and humanize error messages
+    const raw = error?.message || error?.error?.message || String(error);
+    const status = error?.status || error?.statusCode || error?.code;
+
+    // Rate limit / quota exceeded
+    if (status === 429 || raw.includes('RESOURCE_EXHAUSTED') || raw.includes('quota') || raw.includes('rate')) {
+      const providerName = provider === 'anthropic' ? 'Claude' : provider === 'google' ? 'Gemini' : 'Grok';
+      throw Object.assign(new Error(
+        `${providerName}: Anfragelimit erreicht. Bitte warte einen Moment oder wechsle zu einem anderen Modell.`
+      ), { status: 429 });
+    }
+    // Invalid API key
+    if (status === 401 || status === 403 || raw.includes('invalid') && raw.includes('key') || raw.includes('unauthorized')) {
+      throw Object.assign(new Error(
+        'Ungültiger API-Key. Bitte überprüfe den eingegebenen Schlüssel.'
+      ), { status: 401 });
+    }
+    // Model not found
+    if (status === 404 || raw.includes('not found') || raw.includes('does not exist')) {
+      throw Object.assign(new Error(
+        'Das gewählte Modell ist nicht verfügbar. Bitte wähle ein anderes Modell.'
+      ), { status: 404 });
+    }
+    // Fallback: clean up JSON noise
+    const cleaned = raw.replace(/\{[^}]*\}/g, '').replace(/\s+/g, ' ').trim();
+    throw new Error(cleaned || 'Ein unbekannter Fehler ist aufgetreten.');
   }
 }
 
