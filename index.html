@@ -429,8 +429,11 @@
     }
 
     select option {
-      background: var(--bg2);
+      background: #252528;
       color: var(--text);
+    }
+    [data-theme="light"] select option {
+      background: #F0EDE7;
     }
 
     /* Inline API Key */
@@ -2048,14 +2051,18 @@ function updateModelDropdownStatus(selectId) {
     const colonIdx = opt.value.indexOf(':');
     const prov = opt.value.substring(0, colonIdx);
     const conf = PROVIDER_CONFIG[prov];
-    // Originaltext ohne Suffix wiederherstellen
-    let text = opt.textContent.replace(/\s+[\u{1F513}\u{1F5DD}\uFE0F]$/u, '');
+    // Originaltext ohne Emoji-Suffix wiederherstellen
+    let text = opt.getAttribute('data-label');
+    if (!text) {
+      text = opt.textContent.replace(/\s*[🔓🗝️\uFE0F]+$/u, '').trim();
+      opt.setAttribute('data-label', text);
+    }
     if (conf && conf.isFree) {
       opt.textContent = text;
     } else if (getProviderApiKey(prov)) {
-      opt.textContent = text + ' \u{1F513}';
+      opt.textContent = text + ' 🔓';
     } else {
-      opt.textContent = text + ' \u{1F5DD}\uFE0F';
+      opt.textContent = text + ' 🗝️';
     }
   });
 }
